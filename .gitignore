@@ -1,25 +1,111 @@
-# Node
-node_modules
-.next
-pnpm-lock.yaml
+# Dependencies
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+**/.turbo/
+**/.vercel/
 
 # .NET
 **/bin/
 **/obj/
+**/*.user
+**/*.userosscache
+**/*.sln.docstates
 
 # Elixir
 **/_build/
 **/deps/
 **/*.ez
+**/erl_crash.dump
+**/*.beam
 
-dist
-build
-.DS_Store
+# Environment variables & secrets
 .env
 .env.*
 !.env.example
-coverage
-**/.turbo
-**/.vercel
-**/.idea
-**/.vscode
+**/.env
+**/.env.*
+!**/.env.example
+
+# API keys, certificates, and secrets
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*secret*
+*SECRET*
+*password*
+*PASSWORD*
+*api-key*
+*apikey*
+config.json
+secrets.json
+appsettings.Production.json
+appsettings.Staging.json
+
+# Mobile specific
+# Expo
+.expo/
+expo-env.d.ts
+.expo-shared/
+
+# React Native
+*.keystore
+*.mobileprovision
+ios/Pods/
+android/.gradle/
+android/app/release/
+android/app/debug/
+android/keystores/
+.bundle
+
+# Bolt/AI tools
+**/.bolt/
+**/.cursor/
+**/.continue/
+
+# IDE and OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+**/.idea/
+**/.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Coverage and testing
+coverage/
+.nyc_output/
+.coverage/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
