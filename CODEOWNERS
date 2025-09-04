@@ -1,0 +1,8 @@
+# Default owners
+* @your-org/platform-team
+
+/apps/web @your-org/web-team
+/apps/dms-core @your-org/dotnet-team
+/apps/chat-core @your-org/elixir-team
+/packages/shared @your-org/sdk-team
+/infra @your-org/infra-team

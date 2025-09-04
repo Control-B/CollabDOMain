@@ -1,0 +1,552 @@
+# Kubernetes deployment configuration for 30M DAU scale
+# Multi-region, high-availability setup
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: collab-azure-production
+  labels:
+    environment: production
+
+---
+# ConfigMap for application configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: collab-azure-production
+data:
+  # Database configuration
+  DATABASE_HOST: 'postgres-cluster.database.svc.cluster.local'
+  DATABASE_PORT: '5432'
+  DATABASE_NAME: 'collab_azure_prod'
+  REDIS_HOST: 'redis-cluster.cache.svc.cluster.local'
+  REDIS_PORT: '6379'
+
+  # Application settings
+  NODE_ENV: 'production'
+  LOG_LEVEL: 'info'
+
+  # Performance settings
+  MAX_CONNECTIONS: '100000'
+  POOL_SIZE: '100'
+  WORKER_PROCESSES: 'auto'
+
+---
+# Secret for sensitive configuration
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: collab-azure-production
+type: Opaque
+data:
+  # Base64 encoded secrets
+  DATABASE_PASSWORD: '' # Set via external secret manager
+  REDIS_PASSWORD: ''
+  JWT_SECRET: ''
+  S3_ACCESS_KEY: ''
+  S3_SECRET_KEY: ''
+
+---
+# Phoenix Chat Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phoenix-chat-service
+  namespace: collab-azure-production
+  labels:
+    app: phoenix-chat
+    version: v1.0.0
+spec:
+  replicas: 50 # Start with 50 replicas for 30M DAU
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 10%
+  selector:
+    matchLabels:
+      app: phoenix-chat
+  template:
+    metadata:
+      labels:
+        app: phoenix-chat
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+        prometheus.io/path: '/metrics'
+    spec:
+      # Pod anti-affinity for high availability
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - phoenix-chat
+                topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: phoenix-chat
+          image: collab-azure/phoenix-chat:v1.0.0-production
+          ports:
+            - containerPort: 4000
+              name: http
+              protocol: TCP
+            - containerPort: 9090
+              name: metrics
+              protocol: TCP
+
+          # Resource limits for predictable performance
+          resources:
+            requests:
+              memory: '1Gi'
+              cpu: '500m'
+            limits:
+              memory: '2Gi'
+              cpu: '1000m'
+
+          # Environment configuration
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+
+          # Health checks
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Graceful shutdown
+          lifecycle:
+            preStop:
+              exec:
+                command: ['/bin/sh', '-c', 'sleep 15']
+
+          # Security context
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+
+---
+# ASP.NET Core API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aspnet-api-service
+  namespace: collab-azure-production
+  labels:
+    app: aspnet-api
+    version: v1.0.0
+spec:
+  replicas: 30 # 30 replicas for API services
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 10%
+  selector:
+    matchLabels:
+      app: aspnet-api
+  template:
+    metadata:
+      labels:
+        app: aspnet-api
+        version: v1.0.0
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '9090'
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - aspnet-api
+                topologyKey: kubernetes.io/hostname
+
+      containers:
+        - name: aspnet-api
+          image: collab-azure/aspnet-api:v1.0.0-production
+          ports:
+            - containerPort: 5000
+              name: http
+            - containerPort: 9090
+              name: metrics
+
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '250m'
+            limits:
+              memory: '1Gi'
+              cpu: '500m'
+
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+
+---
+# Next.js Web Application Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextjs-web-app
+  namespace: collab-azure-production
+  labels:
+    app: nextjs-web
+    version: v1.0.0
+spec:
+  replicas: 20 # 20 replicas for web frontend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: nextjs-web
+  template:
+    metadata:
+      labels:
+        app: nextjs-web
+        version: v1.0.0
+    spec:
+      containers:
+        - name: nextjs-web
+          image: collab-azure/nextjs-web:v1.0.0-production
+          ports:
+            - containerPort: 3000
+              name: http
+
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '200m'
+
+          envFrom:
+            - configMapRef:
+                name: app-config
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+# Horizontal Pod Autoscaler for Phoenix Chat
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: phoenix-chat-hpa
+  namespace: collab-azure-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: phoenix-chat-service
+  minReplicas: 50
+  maxReplicas: 200 # Scale up to 200 pods under high load
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: phoenix_channels_active
+        target:
+          type: AverageValue
+          averageValue: '20000' # 20K active channels per pod
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 25
+          periodSeconds: 60
+
+---
+# Services for load balancing
+apiVersion: v1
+kind: Service
+metadata:
+  name: phoenix-chat-service
+  namespace: collab-azure-production
+  labels:
+    app: phoenix-chat
+spec:
+  selector:
+    app: phoenix-chat
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+      protocol: TCP
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+      protocol: TCP
+  type: ClusterIP
+  sessionAffinity: ClientIP # Sticky sessions for WebSocket
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aspnet-api-service
+  namespace: collab-azure-production
+  labels:
+    app: aspnet-api
+spec:
+  selector:
+    app: aspnet-api
+  ports:
+    - name: http
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextjs-web-service
+  namespace: collab-azure-production
+  labels:
+    app: nextjs-web
+spec:
+  selector:
+    app: nextjs-web
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+      protocol: TCP
+  type: ClusterIP
+
+---
+# Ingress for external traffic
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: collab-azure-ingress
+  namespace: collab-azure-production
+  annotations:
+    kubernetes.io/ingress.class: 'nginx'
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '3600'
+    nginx.ingress.kubernetes.io/proxy-send-timeout: '3600'
+    nginx.ingress.kubernetes.io/websocket-services: 'phoenix-chat-service'
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+
+    # Rate limiting
+    nginx.ingress.kubernetes.io/rate-limit-connections: '20'
+    nginx.ingress.kubernetes.io/rate-limit-rps: '100'
+
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Frame-Options "DENY" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+spec:
+  tls:
+    - hosts:
+        - app.dispatchar.com
+        - api.dispatchar.com
+        - chat.dispatchar.com
+      secretName: collab-azure-tls
+  rules:
+    - host: app.dispatchar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nextjs-web-service
+                port:
+                  number: 3000
+    - host: api.dispatchar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: aspnet-api-service
+                port:
+                  number: 5000
+    - host: chat.dispatchar.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: phoenix-chat-service
+                port:
+                  number: 4000
+
+---
+# Pod Disruption Budget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: phoenix-chat-pdb
+  namespace: collab-azure-production
+spec:
+  minAvailable: 80%
+  selector:
+    matchLabels:
+      app: phoenix-chat
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: aspnet-api-pdb
+  namespace: collab-azure-production
+spec:
+  minAvailable: 75%
+  selector:
+    matchLabels:
+      app: aspnet-api
+
+---
+# Network Policy for security
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: collab-azure-network-policy
+  namespace: collab-azure-production
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 4000
+        - protocol: TCP
+          port: 5000
+        - protocol: TCP
+          port: 3000
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: database
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: cache
+      ports:
+        - protocol: TCP
+          port: 6379
+
+
+

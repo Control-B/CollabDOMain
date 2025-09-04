@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Light/Dark base helpers */
+html,
+body {
+  height: 100%;
+}
+/* Default colors are Tailwind classes; we keep minimal overrides here. */

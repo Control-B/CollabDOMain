@@ -1,0 +1,23 @@
+{
+  "name": "collab-azure",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "apps/chat-core",
+    "apps/dms-core",
+    "packages/*"
+  ],
+  "packageManager": "pnpm@9.6.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "prettier -w ."
+  },
+  "devDependencies": {
+    "prettier": "^3.3.2",
+    "turbo": "^2.0.6"
+  }
+}

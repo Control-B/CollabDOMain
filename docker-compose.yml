@@ -1,0 +1,72 @@
+services:
+  web:
+    build: ./apps/web
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://dms-core:8080
+      - NEXT_PUBLIC_WS_URL=ws://chat-core:4000/socket
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=please-change-me # TODO: rotate via Key Vault in cloud
+    ports:
+      - '3000:3000'
+    depends_on:
+      - dms-core
+      - chat-core
+
+  dms-core:
+    build: ./apps/dms-core
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=collab;Username=collab;Password=collab
+      - Storage__Blob__ConnectionString=UseDevelopmentStorage=true
+      - Auth__Jwt__Issuer=collabazure-web
+      - Auth__Jwt__Audience=collabazure-api
+      - Auth__Jwt__Secret=please-change-me # must match NEXTAUTH_SECRET if sharing HS256
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres
+      - azurite
+
+  chat-core:
+    build: ./apps/chat-core
+    environment:
+      - MIX_ENV=prod
+      - PORT=4000
+      - SECRET_KEY_BASE=dev-secret-please-change
+      - AUTH_AAD_B2C_ISSUER=https://login.microsoftonline.com/todo-b2c-tenant/v2.0 # TODO
+      - AUTH_AUDIENCE=todo-client-id # TODO
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - '4000:4000'
+    depends_on:
+      - redis
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_USER=collab
+      - POSTGRES_PASSWORD=collab
+      - POSTGRES_DB=collab
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - '6379:6379'
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: 'azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0'
+    ports:
+      - '10000:10000'
+      - '10001:10001'
+      - '10002:10002'
+    volumes:
+      - azurite:/data
+
+volumes:
+  pgdata: {}
+  azurite: {}

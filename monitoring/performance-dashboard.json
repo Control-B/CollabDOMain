@@ -1,0 +1,387 @@
+{
+  "dashboard": {
+    "id": "collab-azure-performance",
+    "title": "CollabAzure - 30M DAU Performance Dashboard",
+    "description": "Real-time performance monitoring for 30 million daily active users",
+    "tags": ["performance", "scale", "monitoring"],
+    "timezone": "UTC",
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+
+    "panels": [
+      {
+        "id": 1,
+        "title": "Real-time User Metrics",
+        "type": "stat",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "targets": [
+          {
+            "expr": "sum(phoenix_channels_active_total)",
+            "legendFormat": "Active WebSocket Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_requests_total[5m])",
+            "legendFormat": "HTTP Requests/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(messages_sent_total[5m]))",
+            "legendFormat": "Messages/sec",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "min": 0,
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "yellow", "value": 1000000 },
+                { "color": "red", "value": 2000000 }
+              ]
+            }
+          }
+        }
+      },
+
+      {
+        "id": 2,
+        "title": "Response Time Distribution",
+        "type": "heatmap",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "50th percentile",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th percentile",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "99th percentile",
+            "refId": "C"
+          }
+        ],
+        "yAxis": {
+          "unit": "ms",
+          "min": 0,
+          "max": 1000
+        }
+      },
+
+      {
+        "id": 3,
+        "title": "Database Performance",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 8 },
+        "targets": [
+          {
+            "expr": "rate(postgres_queries_total[5m])",
+            "legendFormat": "Queries/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "postgres_connections_active",
+            "legendFormat": "Active Connections",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(postgres_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "95th Percentile Query Time",
+            "refId": "C"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Count",
+            "min": 0
+          },
+          {
+            "label": "Duration (ms)",
+            "min": 0,
+            "unit": "ms"
+          }
+        ]
+      },
+
+      {
+        "id": 4,
+        "title": "Redis Cache Performance",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 8 },
+        "targets": [
+          {
+            "expr": "rate(redis_commands_total[5m])",
+            "legendFormat": "Commands/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100",
+            "legendFormat": "Memory Usage %",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(redis_keyspace_hits_total[5m]) / (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m])) * 100",
+            "legendFormat": "Cache Hit Rate %",
+            "refId": "C"
+          }
+        ]
+      },
+
+      {
+        "id": 5,
+        "title": "Application Resource Usage",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 8 },
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[5m]) * 100",
+            "legendFormat": "CPU Usage %",
+            "refId": "A"
+          },
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "Memory Usage (MB)",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(phoenix_channel_joins_total[5m])",
+            "legendFormat": "Channel Joins/sec",
+            "refId": "C"
+          }
+        ]
+      },
+
+      {
+        "id": 6,
+        "title": "Error Rate Monitoring",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{status=~\"5..\"}[5m])",
+            "legendFormat": "5xx Errors/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_requests_total{status=~\"4..\"}[5m])",
+            "legendFormat": "4xx Errors/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(phoenix_channel_errors_total[5m])",
+            "legendFormat": "WebSocket Errors/sec",
+            "refId": "C"
+          }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": {
+                "params": [10],
+                "type": "gt"
+              },
+              "operator": {
+                "type": "and"
+              },
+              "query": {
+                "params": ["A", "5m", "now"]
+              },
+              "reducer": {
+                "params": [],
+                "type": "avg"
+              },
+              "type": "query"
+            }
+          ],
+          "executionErrorState": "alerting",
+          "for": "5m",
+          "frequency": "10s",
+          "handler": 1,
+          "name": "High Error Rate Alert",
+          "noDataState": "no_data",
+          "notifications": []
+        }
+      },
+
+      {
+        "id": 7,
+        "title": "Geographic Distribution",
+        "type": "worldmap",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+        "targets": [
+          {
+            "expr": "sum by (region) (phoenix_channels_active_total)",
+            "legendFormat": "{{region}}",
+            "refId": "A"
+          }
+        ],
+        "worldmapConfig": {
+          "showTooltip": true,
+          "showLegend": true,
+          "enableMouseOver": true,
+          "enableScrollZoom": true
+        }
+      },
+
+      {
+        "id": 8,
+        "title": "Message Queue Performance",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 0, "y": 24 },
+        "targets": [
+          {
+            "expr": "kafka_consumer_lag_sum",
+            "legendFormat": "Kafka Consumer Lag",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(kafka_messages_consumed_total[5m])",
+            "legendFormat": "Messages Consumed/sec",
+            "refId": "B"
+          },
+          {
+            "expr": "rabbitmq_queue_messages",
+            "legendFormat": "RabbitMQ Queue Depth",
+            "refId": "C"
+          }
+        ]
+      },
+
+      {
+        "id": 9,
+        "title": "CDN & Static Assets",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 8, "y": 24 },
+        "targets": [
+          {
+            "expr": "rate(cloudflare_requests_total[5m])",
+            "legendFormat": "CDN Requests/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "cloudflare_bandwidth_bytes / 1024 / 1024",
+            "legendFormat": "CDN Bandwidth (MB/s)",
+            "refId": "B"
+          },
+          {
+            "expr": "cloudflare_cache_hit_ratio * 100",
+            "legendFormat": "CDN Cache Hit Rate %",
+            "refId": "C"
+          }
+        ]
+      },
+
+      {
+        "id": 10,
+        "title": "Auto-scaling Metrics",
+        "type": "graph",
+        "gridPos": { "h": 8, "w": 8, "x": 16, "y": 24 },
+        "targets": [
+          {
+            "expr": "kube_deployment_status_replicas",
+            "legendFormat": "Pod Replicas",
+            "refId": "A"
+          },
+          {
+            "expr": "kube_hpa_status_current_replicas",
+            "legendFormat": "HPA Current Replicas",
+            "refId": "B"
+          },
+          {
+            "expr": "kube_hpa_status_desired_replicas",
+            "legendFormat": "HPA Desired Replicas",
+            "refId": "C"
+          }
+        ]
+      }
+    ],
+
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "query",
+          "query": "label_values(environment)",
+          "current": {
+            "text": "production",
+            "value": "production"
+          }
+        },
+        {
+          "name": "region",
+          "type": "query",
+          "query": "label_values(region)",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          }
+        }
+      ]
+    },
+
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "Prometheus",
+          "expr": "increase(deployment_timestamp[1m])",
+          "iconColor": "blue",
+          "textFormat": "Deployment: {{version}}"
+        },
+        {
+          "name": "Alerts",
+          "datasource": "Prometheus",
+          "expr": "ALERTS{alertstate=\"firing\"}",
+          "iconColor": "red",
+          "textFormat": "Alert: {{alertname}}"
+        }
+      ]
+    }
+  },
+
+  "alerting": {
+    "rules": [
+      {
+        "name": "high_response_time",
+        "condition": "avg(http_request_duration_seconds{quantile=\"0.95\"}) > 0.1",
+        "for": "5m",
+        "severity": "warning",
+        "message": "95th percentile response time is above 100ms"
+      },
+      {
+        "name": "high_error_rate",
+        "condition": "rate(http_requests_total{status=~\"5..\"}[5m]) > 10",
+        "for": "2m",
+        "severity": "critical",
+        "message": "Error rate is above 10 errors/second"
+      },
+      {
+        "name": "database_connection_pool_exhausted",
+        "condition": "postgres_connections_active / postgres_connections_max > 0.9",
+        "for": "3m",
+        "severity": "critical",
+        "message": "Database connection pool is 90% utilized"
+      },
+      {
+        "name": "memory_usage_high",
+        "condition": "process_resident_memory_bytes / 1024 / 1024 / 1024 > 4",
+        "for": "5m",
+        "severity": "warning",
+        "message": "Application memory usage is above 4GB"
+      }
+    ]
+  }
+}
+
+
+

@@ -1,0 +1,25 @@
+# Node
+node_modules
+.next
+pnpm-lock.yaml
+
+# .NET
+**/bin/
+**/obj/
+
+# Elixir
+**/_build/
+**/deps/
+**/*.ez
+
+dist
+build
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage
+**/.turbo
+**/.vercel
+**/.idea
+**/.vscode

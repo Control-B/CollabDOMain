@@ -1,0 +1,14 @@
+{
+  "name": "@collab/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "echo 'TODO: openapi generate TS SDK'",
+    "test": "echo 'TODO: tests' && exit 0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}
