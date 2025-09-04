@@ -24,7 +24,7 @@ import { router } from 'expo-router';
 import { Document } from './types';
 import DocumentList from './components/DocumentList';
 import DocumentViewer from './components/DocumentViewer';
-import SignatureInterface from '@/components/SignatureInterface';
+// import SignatureInterface from '@/components/SignatureInterface';
 
 export default function ESignDashboard() {
   const [activeTab, setActiveTab] = useState<

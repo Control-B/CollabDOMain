@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Platform,
   ScrollView,
@@ -12,11 +12,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { router, useRouter } from 'expo-router';
-import { phoenixService } from '../../services/phx';
-import api from '../../services/api';
 import { User } from 'lucide-react-native';
-
-// Compact home header; remove bulky elements for better mobile layout
 
 export default function HomeScreen() {
   const hookRouter = useRouter();
@@ -25,6 +21,10 @@ export default function HomeScreen() {
   // Override State
   const [showOverrideModal, setShowOverrideModal] = useState(false);
   const [selectedOverrideReason, setSelectedOverrideReason] = useState('');
+  
+  // Channels State
+  const [channels, setChannels] = useState([]);
+  const [currentChannel, setCurrentChannel] = useState(null);
 
   const overrideReasons = [
     'Emergency delivery required',
@@ -37,341 +37,226 @@ export default function HomeScreen() {
     'Other (to be documented)',
   ];
 
-  // Removed geofence simulation; Check-In now flows through Trip Sheet
-
-  // Handle check-in button press
-  const handleCheckInPress = () => {
-    // Only submit an already saved trip sheet; do not open/create sheets here
-    (async () => {
+  // Fetch channels from web app
+  useEffect(() => {
+    const fetchChannels = async () => {
       try {
-        let json: string | null = null;
-        if (Platform.OS === 'web') {
-          try {
-            json =
-              (globalThis as any).localStorage?.getItem('tripSheetSaved') ??
-              null;
-          } catch {}
-        } else {
-          const { default: AsyncStorage } = await import(
-            '@react-native-async-storage/async-storage'
+        const response = await fetch('http://127.0.0.1:3010/api/channels');
+        if (response.ok) {
+          const channelsData = await response.json();
+          setChannels(channelsData);
+          
+          console.log('📱 Fetched channels:', channelsData.length);
+          
+          // Find the most recent channel with a vehicle number (trip-related)
+          const tripChannels = channelsData.filter(channel => 
+            channel.vehicleNumber && 
+            (channel.category === 'inbound' || channel.category === 'outbound')
           );
-          json = await AsyncStorage.getItem('tripSheetSaved');
-        }
-
-        const trip = json ? JSON.parse(json) : null;
-        if (!trip) {
-          Alert.alert(
-            'No Saved Trip Sheet',
-            'Use the Trip Sheet button to open and save your trip sheet, or Create New Trip to start one. Then tap Check In to submit.'
+          
+          const currentTripId = 'PO-12345';
+          const currentVehicleId = 'TRK-001';
+          
+          // Look for channels that match our current trip data
+          const exactMatchChannels = tripChannels.filter(channel => 
+            channel.poNumber === currentTripId || channel.name === currentTripId
           );
-          return;
+          
+          const vehicleMatchChannels = tripChannels.filter(channel => 
+            channel.vehicleNumber === currentVehicleId
+          );
+          
+          const matchingChannels = exactMatchChannels.length > 0 ? exactMatchChannels : 
+                                   vehicleMatchChannels.length > 0 ? vehicleMatchChannels : 
+                                   tripChannels;
+          
+          if (matchingChannels.length > 0) {
+            const mostRecentChannel = matchingChannels.sort((a, b) => 
+              new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+            )[0];
+            setCurrentChannel(mostRecentChannel);
+            console.log('📱 Current channel set:', mostRecentChannel);
+          }
         }
-
-        try {
-          await phoenixService.notifyShippingOfficeCheckIn(trip);
-        } catch (err) {
-          console.warn('Phoenix notify failed, using REST fallback:', err);
-          await api.notifyShippingOfficeCheckIn(trip);
-        }
-
-        // Proceed directly to the check-in flow after successful submit
-        navigateRouter.push('/checkin/inbound');
-      } catch (e) {
-        console.error('Check-in notification failed', e);
-        Alert.alert('Error', 'Failed to notify shipping office.');
+      } catch (error) {
+        console.error('📱 Error fetching channels:', error);
       }
-    })();
+    };
+
+    fetchChannels();
+    const interval = setInterval(fetchChannels, 5000); // Refresh every 5 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleCheckIn = () => {
+    console.log('📱 Check In button pressed');
+    navigateRouter.push('/checkin/inbound');
   };
 
-  // Navigate to check-in page
-  const navigateToCheckIn = (overrideReason?: string) => {
-    try {
-      if (overrideReason) {
-        console.log('Check-in override reason:', overrideReason);
-        // In real app, log the override reason to backend
-      }
-      navigateRouter.push('/checkin/inbound');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('Router error:', error);
-      Alert.alert('Error', 'Navigation failed: ' + message);
-    }
+  const handleOverride = () => {
+    console.log('📱 Override button pressed');
+    setShowOverrideModal(true);
   };
 
-  // Handle override confirmation
-  const handleOverrideConfirm = () => {
+  const handleOverrideSubmit = () => {
     if (!selectedOverrideReason) {
-      Alert.alert('Required', 'Please select a reason for override');
+      Alert.alert('Error', 'Please select a reason for override');
       return;
     }
-
+    
+    console.log('📱 Override submitted with reason:', selectedOverrideReason);
+    navigateRouter.push('/checkin/inbound?override=true');
     setShowOverrideModal(false);
     setSelectedOverrideReason('');
-    navigateToCheckIn(selectedOverrideReason);
   };
-
-  // Mock data for current trip and channel
-  const currentTrip = {
-    id: 'TS-2024-001',
-    status: 'in_progress',
-    progress: 65,
-    driverName: 'John Smith',
-    vehicleId: 'TRK-001',
-    pickupLocation: 'Warehouse A - Chicago, IL',
-    deliveryLocation: 'Distribution Center - Dallas, TX',
-    estimatedArrival: '2:30 PM',
-    cargo: 'Electronics - 15 pallets',
-  };
-
-  // Navigation handlers
-  // removed Trip Sheets card; no direct navigation from Home
 
   const handleCurrentTripPress = () => {
-    try {
-      // Open the Trip Sheet page (view/edit/save/share/delete)
-      navigateRouter.push('/trip-sheet');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('Router error:', error);
-      Alert.alert('Error', 'Navigation failed: ' + message);
+    if (currentChannel) {
+      console.log('📱 Current trip pressed, navigating to chat:', currentChannel);
+      navigateRouter.push({
+        pathname: '/chat/[id]',
+        params: {
+          id: currentChannel.poNumber || currentChannel.name,
+          title: currentChannel.poNumber || currentChannel.name,
+          vehicleId: currentChannel.vehicleNumber,
+          type: 'channel',
+          channelType: currentChannel.category,
+          doorNumber: currentChannel.doorNumber || 'D-15',
+          doorStatus: currentChannel.doorStatus || 'green',
+        },
+      });
+    } else {
+      Alert.alert('No Active Trip', 'No active trip channel found. Please check in first.');
     }
   };
 
-  const handleCreateTrip = () => {
-    try {
-      navigateRouter.push('/create-trip');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error('Router error:', error);
-      Alert.alert('Error', 'Navigation failed: ' + message);
-    }
+  const handleTripSheet = () => {
+    console.log('📱 Trip Sheet button pressed');
+    navigateRouter.push('/trip-sheets');
   };
+
+  const handleCreateNewTrip = () => {
+    console.log('📱 Create New Trip button pressed');
+    navigateRouter.push('/create-trip');
+  };
+
+  const tripChannels = channels.filter(channel => 
+    channel.vehicleNumber && 
+    (channel.category === 'inbound' || channel.category === 'outbound')
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1d29" />
-
+      <StatusBar barStyle="light-content" backgroundColor="#151937" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{currentTrip.driverName}</Text>
-        <TouchableOpacity style={styles.userAvatar}>
+        <Text style={styles.headerTitle}>John Smith</Text>
+        <TouchableOpacity style={styles.userButton}>
           <User size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Current Trip - now top of page */}
-        <View style={styles.vStackCard}>
-          <View style={styles.cardHeader}>
-            <View style={styles.cardTitleInfo}>
-              <Text style={styles.cardTitle}>Current Trip</Text>
-              <Text style={styles.cardSubtitle}>Trip #{currentTrip.id}</Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Current Trip Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Current Trip</Text>
+          
+          <TouchableOpacity style={styles.tripCard} onPress={handleCurrentTripPress}>
+            <View style={styles.tripHeader}>
+              <Text style={styles.tripTitle}>Trip #{currentChannel?.poNumber || 'PO-12345'}</Text>
+              <View style={styles.statusDot} />
             </View>
-            {/* Removed header arrow to avoid duplicate navigation to Trip Sheet */}
-          </View>
-
-          <View style={styles.cardContent}>
-            {/* Progress Bar */}
-            <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Trip Progress</Text>
-                <Text style={styles.progressPercent}>
-                  {currentTrip.progress}%
-                </Text>
-              </View>
+            
+            <Text style={styles.tripChannels}>
+              Trip Channels: {tripChannels.length} | Current: {currentChannel ? 'Active' : 'None'}
+            </Text>
+            
+            <View style={styles.progressContainer}>
               <View style={styles.progressBar}>
-                <View
-                  style={[
-                    styles.progressFill,
-                    { width: `${currentTrip.progress}%` },
-                  ]}
-                />
+                <View style={[styles.progressFill, { width: '65%' }]} />
               </View>
+              <Text style={styles.progressText}>65%</Text>
             </View>
-            {/* Route Info */}
-            <View style={styles.routeSection}>
-              <View style={styles.routeItem}>
-                <Text style={styles.routeText} numberOfLines={1}>
-                  From: {currentTrip.pickupLocation}
-                </Text>
-              </View>
-              <View style={styles.routeItem}>
-                <Text style={styles.routeText} numberOfLines={1}>
-                  To: {currentTrip.deliveryLocation}
-                </Text>
-              </View>
+            
+            <View style={styles.tripDetails}>
+              <Text style={styles.tripDetail}>From: Warehouse A - Chicago, IL</Text>
+              <Text style={styles.tripDetail}>To: Distribution Center - Dallas, TX</Text>
+              <Text style={styles.tripDetail}>ETA: 2:30 PM</Text>
+              <Text style={styles.tripDetail}>CARGO: Electronics - 15 pallets</Text>
             </View>
-            <View style={styles.tripDetailsRow}>
-              <View style={styles.tripDetail}>
-                <Text style={styles.tripDetailLabel}>ETA:</Text>
-                <Text style={styles.tripDetailText}>
-                  {currentTrip.estimatedArrival}
-                </Text>
-              </View>
-              <View style={styles.tripDetail}>
-                <Text style={styles.tripDetailLabel}>Cargo:</Text>
-                <Text style={styles.tripDetailText} numberOfLines={1}>
-                  {currentTrip.cargo}
-                </Text>
-              </View>
-            </View>
-            {/* Stacked actions: Check-In, Override, Trip Sheet */}
-            <View style={styles.checkInContainer}>
-              <View style={styles.buttonStack}>
-                <TouchableOpacity
-                  style={styles.checkInButton}
-                  onPress={handleCheckInPress}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel="Check In"
-                >
-                  <Text style={styles.checkInButtonText}>Check In</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.overrideButton}
-                  onPress={() => setShowOverrideModal(true)}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel="Override Check In"
-                >
-                  <Text style={styles.overrideButtonText}>Override</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.secondaryButton}
-                  onPress={handleCurrentTripPress}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel="Open Trip Sheet"
-                >
-                  <Text style={styles.secondaryButtonText}>Trip Sheet</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Removed location status text under buttons */}
-            </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
-        {/* Standalone Create New Trip button below Current Trip */}
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={handleCreateTrip}
-        >
-          <Text style={styles.primaryButtonText}>Create New Trip</Text>
-        </TouchableOpacity>
+        {/* Action Buttons */}
+        <View style={styles.actionsSection}>
+          <TouchableOpacity style={styles.checkInButton} onPress={handleCheckIn}>
+            <Text style={styles.buttonText}>Check In</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.overrideButton} onPress={handleOverride}>
+            <Text style={styles.buttonText}>Override</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.tripSheetButton} onPress={handleTripSheet}>
+            <Text style={styles.buttonText}>Trip Sheet</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.createTripButton} onPress={handleCreateNewTrip}>
+            <Text style={styles.buttonText}>Create New Trip</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
-      {/* Override Reason Modal */}
+      {/* Override Modal */}
       <Modal
         visible={showOverrideModal}
-        animationType="slide"
-        presentationStyle="formSheet"
-        onRequestClose={() => {
-          setShowOverrideModal(false);
-          setSelectedOverrideReason('');
-        }}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowOverrideModal(false)}
       >
-        <SafeAreaView style={styles.modalFullScreen}>
-          <View style={styles.modalContainer}>
-            {/* Modal Handle */}
-            <View style={styles.modalHandle} />
-
-            {/* Modal Header with Close Button */}
-            <View style={styles.modalHeader}>
-              <View style={styles.modalTitleSection}>
-                <Text style={styles.modalTitle}>Override Required</Text>
-                <TouchableOpacity
-                  style={styles.modalCloseButton}
-                  onPress={() => {
-                    setShowOverrideModal(false);
-                    setSelectedOverrideReason('');
-                  }}
-                >
-                  <Text style={styles.modalCloseText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.modalSubtitle}>
-                You are outside the delivery zone. Select a reason to proceed
-                with check-in:
-              </Text>
-            </View>
-
-            {/* Scrollable Reasons List */}
-            <ScrollView
-              style={styles.modalScrollView}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.modalScrollContent}
-            >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Override Reason</Text>
+            <Text style={styles.modalSubtitle}>Please select a reason for the override:</Text>
+            
+            <ScrollView style={styles.reasonsList}>
               {overrideReasons.map((reason, index) => (
                 <TouchableOpacity
                   key={index}
                   style={[
                     styles.reasonItem,
-                    selectedOverrideReason === reason &&
-                      styles.reasonItemSelected,
+                    selectedOverrideReason === reason && styles.reasonItemSelected
                   ]}
                   onPress={() => setSelectedOverrideReason(reason)}
-                  activeOpacity={0.7}
                 >
-                  <View style={styles.reasonContent}>
-                    <View
-                      style={[
-                        styles.reasonRadio,
-                        selectedOverrideReason === reason &&
-                          styles.reasonRadioSelected,
-                      ]}
-                    >
-                      {selectedOverrideReason === reason && (
-                        <View style={styles.radioDot} />
-                      )}
-                    </View>
-                    <Text
-                      style={[
-                        styles.reasonText,
-                        selectedOverrideReason === reason &&
-                          styles.reasonTextSelected,
-                      ]}
-                    >
-                      {reason}
-                    </Text>
-                  </View>
+                  <Text style={[
+                    styles.reasonText,
+                    selectedOverrideReason === reason && styles.reasonTextSelected
+                  ]}>
+                    {reason}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-
-            {/* Fixed Action Buttons */}
-            <View style={styles.modalFooter}>
+            
+            <View style={styles.modalActions}>
               <TouchableOpacity
                 style={styles.cancelButton}
-                onPress={() => {
-                  setShowOverrideModal(false);
-                  setSelectedOverrideReason('');
-                }}
+                onPress={() => setShowOverrideModal(false)}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-
+              
               <TouchableOpacity
-                style={[
-                  styles.confirmButton,
-                  !selectedOverrideReason && styles.confirmButtonDisabled,
-                ]}
-                onPress={handleOverrideConfirm}
-                disabled={!selectedOverrideReason}
+                style={styles.submitButton}
+                onPress={handleOverrideSubmit}
               >
-                <Text style={styles.confirmButtonText}>
-                  Proceed with Override
-                </Text>
+                <Text style={styles.submitButtonText}>Submit Override</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
     </SafeAreaView>
   );
@@ -380,582 +265,202 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    ...Platform.select({
-      android: {
-        paddingTop: 10,
-      },
-    }),
+    backgroundColor: '#151937',
   },
   header: {
-    backgroundColor: '#0F172A',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  welcomeText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginBottom: 4,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 4,
-  },
-  userAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#3B82F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-  statusContainer: {
-    alignItems: 'flex-end',
-  },
-  statusIndicator: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  statusText: {
-    fontSize: 12,
-  },
-  userImageContainer: {
-    alignItems: 'flex-end',
-  },
-  userImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#06B6D4', // Modern cyan for user avatar
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  userImageText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    gap: 20,
-  },
-  vStackCard: {
+    paddingVertical: 16,
     backgroundColor: '#1E293B',
-    borderRadius: 20,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#334155',
   },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  cardIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  cardTitleInfo: {
-    flex: 1,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 2,
   },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  cardAction: {
+  userButton: {
     padding: 8,
   },
-  cardContent: {
+  content: {
+    flex: 1,
     padding: 20,
   },
-  statsRow: {
-    flexDirection: 'row',
-    marginBottom: 20,
-    gap: 1,
+  section: {
+    marginBottom: 24,
   },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#334155',
-    marginHorizontal: 1,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#94A3B8',
-    textAlign: 'center',
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563EB', // Bright blue for Create Trip Sheet
-    borderRadius: 16,
-    paddingVertical: 18,
-    gap: 8,
-    shadowColor: '#2563EB',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  primaryButtonText: {
-    fontSize: 16,
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#FFFFFF',
+    marginBottom: 12,
   },
-  secondaryButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0891B2', // Cyan for secondary actions
+  tripCard: {
+    backgroundColor: '#1E293B',
     borderRadius: 12,
-    paddingVertical: 14,
-    marginTop: 12,
-    shadowColor: '#0891B2',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 6,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#E2E8F0',
-  },
-  progressSection: {
-    marginBottom: 20,
-  },
-  progressHeader: {
+  tripHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  progressLabel: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-  progressPercent: {
+  tripTitle: {
     fontSize: 16,
-    color: '#22C55E',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#FFFFFF',
+    flex: 1,
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+  },
+  tripChannels: {
+    fontSize: 14,
+    color: '#94A3B8',
+    marginBottom: 12,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   progressBar: {
+    flex: 1,
     height: 8,
     backgroundColor: '#334155',
     borderRadius: 4,
-    overflow: 'hidden',
+    marginRight: 12,
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#10B981',
     borderRadius: 4,
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.5,
-    shadowRadius: 4,
   },
-  routeSection: {
-    marginBottom: 16,
-    gap: 8,
-  },
-  routeItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  routeText: {
+  progressText: {
     fontSize: 14,
-    color: '#9CA3AF',
-    flex: 1,
-  },
-  tripDetailsRow: {
-    flexDirection: 'row',
-    gap: 16,
-  },
-  tripDetail: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  tripDetailText: {
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '500',
-    flex: 1,
-  },
-  tripDetailLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginRight: 4,
+    color: '#10B981',
   },
-  locationStatus: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 8,
-    fontWeight: '500',
-  },
-  channelItem: {
-    backgroundColor: '#374151',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  channelItemUnread: {
-    backgroundColor: '#3B82F620',
-    borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
-  },
-  channelInfo: {
-    flex: 1,
-  },
-  channelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  channelName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-    flex: 1,
-    marginRight: 8,
-  },
-  channelMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  tripDetails: {
     gap: 4,
   },
-  channelParticipants: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  unreadBadge: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadCount: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  channelLastMessage: {
+  tripDetail: {
     fontSize: 14,
-    color: '#9CA3AF',
-    marginBottom: 4,
+    color: '#E2E8F0',
   },
-  channelTime: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  checkInContainer: {
-    marginTop: 16,
-  },
-  buttonStack: {
+  actionsSection: {
     gap: 12,
   },
   checkInButton: {
-    flexDirection: 'row',
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#059669', // Emerald green for check-in success
-    borderRadius: 12,
-    paddingVertical: 14,
-    gap: 8,
-    shadowColor: '#059669',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  checkInButtonDisabled: {
-    backgroundColor: '#6B7280',
-  },
-  checkInButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  checkInButtonTextDisabled: {
-    color: '#D1D5DB',
   },
   overrideButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#1E40AF', // Dark blue for override action
-    borderRadius: 14,
+    backgroundColor: '#3B82F6',
     paddingVertical: 16,
-    gap: 8,
-    shadowColor: '#1E40AF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  overrideButtonText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  geofenceStatus: {
-    flexDirection: 'row',
+    borderRadius: 8,
     alignItems: 'center',
-    marginTop: 8,
-    paddingHorizontal: 4,
-    gap: 6,
   },
-  geofenceIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  tripSheetButton: {
+    backgroundColor: '#06B6D4',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  geofenceStatusText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
+  createTripButton: {
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  // Modal Styles - Mobile Responsive
-  modalFullScreen: {
-    flex: 1,
-    backgroundColor: '#0F172A',
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'flex-end',
-    paddingHorizontal: 0,
-    paddingBottom: 0,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#1F2937',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: '#6B7280',
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  modalHeader: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#374151',
-  },
-  modalTitleSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+  },
+  modalContent: {
+    backgroundColor: '#1E293B',
+    borderRadius: 12,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  modalCloseButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#374151',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalCloseText: {
-    fontSize: 16,
-    color: '#9CA3AF',
     fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
   },
   modalSubtitle: {
     fontSize: 14,
-    color: '#9CA3AF',
-    lineHeight: 20,
+    color: '#94A3B8',
+    marginBottom: 16,
   },
-  modalScrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  modalScrollContent: {
-    paddingVertical: 20,
+  reasonsList: {
+    maxHeight: 300,
+    marginBottom: 20,
   },
   reasonItem: {
-    backgroundColor: '#374151',
-    borderRadius: 12,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'transparent',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
   },
   reasonItemSelected: {
-    backgroundColor: '#1D4ED8',
+    backgroundColor: '#3B82F6',
     borderColor: '#3B82F6',
   },
-  reasonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 12,
-  },
-  reasonRadio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#6B7280',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-  },
-  reasonRadioSelected: {
-    borderColor: '#FFFFFF',
-    backgroundColor: '#FFFFFF',
-  },
-  radioDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1D4ED8',
-  },
   reasonText: {
-    fontSize: 15,
-    color: '#E5E7EB',
-    flex: 1,
-    lineHeight: 22,
-    fontWeight: '500',
+    fontSize: 14,
+    color: '#E2E8F0',
   },
   reasonTextSelected: {
     color: '#FFFFFF',
     fontWeight: '600',
   },
-  modalFooter: {
+  modalActions: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Add safe area padding for iOS
     gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
-    backgroundColor: '#1F2937',
   },
   cancelButton: {
     flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#374151',
+    paddingVertical: 12,
+    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#E5E7EB',
-  },
-  confirmButton: {
-    flex: 2,
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#7C3AED', // Purple for confirmation actions
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  confirmButtonDisabled: {
     backgroundColor: '#6B7280',
   },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
+  cancelButtonText: {
     color: '#FFFFFF',
-    textAlign: 'center',
-    alignSelf: 'stretch',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  submitButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: '#3B82F6',
+  },
+  submitButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

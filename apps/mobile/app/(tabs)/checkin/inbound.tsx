@@ -1,4 +1,3 @@
-// Inlined original screen to keep TabBar persistent and avoid cross-folder import quirks
 import { useState, useEffect } from 'react';
 import {
   View,
@@ -8,8 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as Location from 'expo-location';
 import {
   ArrowLeft,
@@ -18,324 +18,244 @@ import {
   CheckCircle,
   Loader,
 } from 'lucide-react-native';
-import AutoCompleteInput from '@/components/AutoCompleteInput';
 
 interface CheckInFormData {
   driverName: string;
   phoneNumber: string;
   vehicleId: string;
-  trailerNumber: string;
-  pickupLocation: string;
-  pickupAddress: string;
-  pickupPhone: string;
-  pickupNumber: string;
-  appointmentDate: string;
+  poNumber: string;
+  tripId: string;
   appointmentTime: string;
+  appointmentISO: string;
+  cargoDescription: string;
+  specialInstructions: string;
+  contactPerson: string;
+  contactPhone: string;
+  dockNumber: string;
+  loadingType: string;
 }
 
 export default function InboundCheckInScreen() {
   const router = useRouter();
-  const [isLocationChecking, setIsLocationChecking] = useState(true);
-  const [isWithinGeofence, setIsWithinGeofence] = useState(false);
-  // currentLocation not used in UI; omit to avoid warnings
+  const { override } = useLocalSearchParams<{ override?: string }>();
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState<CheckInFormData>({
-    driverName: '',
-    phoneNumber: '',
-    vehicleId: '',
-    trailerNumber: '',
-    pickupLocation: '',
-    pickupAddress: '',
-    pickupPhone: '',
-    pickupNumber: '',
-    appointmentDate: '',
-    appointmentTime: '',
+    driverName: 'John Smith',
+    phoneNumber: '+1-555-0123',
+    vehicleId: 'TRK-001',
+    poNumber: 'PO-12345',
+    tripId: 'PO-12345', // Use same value as poNumber for consistency
+    appointmentTime: '2:30 PM',
+    appointmentISO: new Date().toISOString(),
+    cargoDescription: 'Electronics - 15 pallets',
+    specialInstructions: 'Handle with care - fragile items',
+    contactPerson: 'Warehouse Manager',
+    contactPhone: '+1-555-0456',
+    dockNumber: 'D-15',
+    loadingType: 'Standard Loading',
   });
 
   useEffect(() => {
-    // run once on mount
-    checkLocationPermissionAndGeofence();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    getCurrentLocation();
   }, []);
 
-  const checkLocationPermissionAndGeofence = async () => {
+  const getCurrentLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert(
-          'Location Permission Required',
-          'This app needs location permission to verify you are within the pickup geofence.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
+        setLocationError('Location permission denied');
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.High,
-      });
-      // location available if needed for further logic
-
-      const isWithinRange = simulateGeofenceCheck(location);
-      setIsWithinGeofence(isWithinRange);
-      setIsLocationChecking(false);
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      setLocation(currentLocation);
     } catch (error) {
+      setLocationError('Failed to get location');
       console.error('Location error:', error);
-      Alert.alert(
-        'Location Error',
-        'Unable to get your location. Please try again.'
-      );
-      setIsLocationChecking(false);
     }
   };
 
-  const simulateGeofenceCheck = (
-    location: Location.LocationObject
-  ): boolean => {
-    return Math.random() > 0.3;
-  };
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    
+    try {
+      const tripData = {
+        driverName: formData.driverName,
+        phoneNumber: formData.phoneNumber,
+        vehicleId: formData.vehicleId,
+        poNumber: formData.poNumber,
+        tripId: formData.tripId,
+        appointmentTime: formData.appointmentTime,
+        appointmentISO: formData.appointmentISO,
+        cargoDescription: formData.cargoDescription,
+        specialInstructions: formData.specialInstructions,
+        contactPerson: formData.contactPerson,
+        contactPhone: formData.contactPhone,
+        dockNumber: formData.dockNumber,
+        loadingType: formData.loadingType,
+        location: location ? {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        } : null,
+        timestamp: new Date().toISOString(),
+        override: override === 'true',
+      };
 
-  const handleInputChange = (field: keyof CheckInFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+      console.log('📱 Submitting check-in data:', tripData);
 
-  const validateForm = (): boolean => {
-    const required = [
-      'driverName',
-      'phoneNumber',
-      'vehicleId',
-      'pickupLocation',
-      'pickupAddress',
-    ];
-    for (const field of required) {
-      if (!formData[field as keyof CheckInFormData].trim()) {
-        Alert.alert(
-          'Missing Information',
-          `Please fill in ${field.replace(/([A-Z])/g, ' $1').toLowerCase()}`
-        );
-        return false;
-      }
-    }
-    return true;
-  };
-
-  const handleSubmitCheckIn = () => {
-    if (!isWithinGeofence) {
-      Alert.alert(
-        'Location Required',
-        'You must be within 0.5 miles of the pickup location to submit check-in.',
-        [{ text: 'OK' }]
-      );
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
-
-    Alert.alert(
-      'Submit Check-In',
-      'Are you sure you want to submit your check-in form? This will notify the shipping office.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Submit',
-          onPress: () => {
-            Alert.alert(
-              'Check-In Submitted',
-              'Your check-in has been submitted to the shipping office. They will create a communication channel for your trip.',
-              [{ text: 'OK', onPress: () => router.back() }]
-            );
-          },
+      // Send to web app
+      const response = await fetch('http://127.0.0.1:3010/api/driver-checkins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      ]
-    );
-  };
+        body: JSON.stringify(tripData),
+      });
 
-  if (isLocationChecking) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Loader size={48} color="#3B82F6" />
-          <Text style={styles.loadingText}>Checking your location...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+      if (response.ok) {
+        Alert.alert('Success', 'Check-in submitted successfully!');
+        router.back();
+      } else {
+        throw new Error('Failed to submit check-in');
+      }
+    } catch (error) {
+      console.error('Submit error:', error);
+      Alert.alert('Error', 'Failed to submit check-in. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <ArrowLeft size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>📥 Inbound Check-In</Text>
-      </View>
-
-      <View
-        style={
-          [
-            styles.locationStatus,
-            {
-              backgroundColor: isWithinGeofence
-                ? '#10B981' + '20'
-                : '#EF4444' + '20',
-            },
-          ] as any
-        }
-      >
-        <View style={styles.locationHeader}>
-          {isWithinGeofence ? (
-            <CheckCircle size={20} color="#10B981" />
-          ) : (
-            <AlertCircle size={20} color="#EF4444" />
-          )}
-          <Text
-            style={
-              [
-                styles.locationText,
-                { color: isWithinGeofence ? '#10B981' : '#EF4444' },
-              ] as any
-            }
-          >
-            {isWithinGeofence
-              ? 'Within Pickup Geofence'
-              : 'Outside Pickup Geofence'}
-          </Text>
-        </View>
-        <Text style={styles.locationSubtext}>
-          {isWithinGeofence
-            ? 'You can submit your check-in form'
-            : 'Move within 0.5 miles of pickup location to check in'}
-        </Text>
+        <Text style={styles.headerTitle}>Inbound Check-In</Text>
+        <View style={styles.headerRight} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👤 Driver Information</Text>
+        <View style={styles.form}>
+          <Text style={styles.sectionTitle}>Driver Information</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Driver Name</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.driverName}
+              onChangeText={(text) => setFormData({...formData, driverName: text})}
+              placeholder="Enter driver name"
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Driver Name"
-            value={formData.driverName}
-            onChangeText={(value) => handleInputChange('driverName', value)}
-            placeholder="Enter your full name"
-            type="company"
-            required
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.phoneNumber}
+              onChangeText={(text) => setFormData({...formData, phoneNumber: text})}
+              placeholder="Enter phone number"
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Phone Number"
-            value={formData.phoneNumber}
-            onChangeText={(value) => handleInputChange('phoneNumber', value)}
-            placeholder="(XXX) XXX-XXXX"
-            type="phone"
-            required
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Vehicle ID</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.vehicleId}
+              onChangeText={(text) => setFormData({...formData, vehicleId: text})}
+              placeholder="Enter vehicle ID"
+            />
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🚛 Vehicle Information</Text>
+          <Text style={styles.sectionTitle}>Trip Information</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>PO Number</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.poNumber}
+              onChangeText={(text) => setFormData({...formData, poNumber: text})}
+              placeholder="Enter PO number"
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Truck/Vehicle ID"
-            value={formData.vehicleId}
-            onChangeText={(value) => handleInputChange('vehicleId', value)}
-            placeholder="TRK-001"
-            type="company"
-            required
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Trip ID</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.tripId}
+              onChangeText={(text) => setFormData({...formData, tripId: text})}
+              placeholder="Enter trip ID"
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Trailer Number"
-            value={formData.trailerNumber}
-            onChangeText={(value) => handleInputChange('trailerNumber', value)}
-            placeholder="TRL-001 (if applicable)"
-            type="company"
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Appointment Time</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.appointmentTime}
+              onChangeText={(text) => setFormData({...formData, appointmentTime: text})}
+              placeholder="Enter appointment time"
+            />
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 Pickup Information</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Cargo Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.cargoDescription}
+              onChangeText={(text) => setFormData({...formData, cargoDescription: text})}
+              placeholder="Enter cargo description"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Pickup Location Name"
-            value={formData.pickupLocation}
-            onChangeText={(value) => handleInputChange('pickupLocation', value)}
-            placeholder="Warehouse, Store, etc."
-            type="company"
-            required
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Dock Number</Text>
+            <TextInput
+              style={styles.input}
+              value={formData.dockNumber}
+              onChangeText={(text) => setFormData({...formData, dockNumber: text})}
+              placeholder="Enter dock number"
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Pickup Address"
-            value={formData.pickupAddress}
-            onChangeText={(value) => handleInputChange('pickupAddress', value)}
-            placeholder="123 Main St, City, State ZIP"
-            type="address"
-            required
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Special Instructions</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={formData.specialInstructions}
+              onChangeText={(text) => setFormData({...formData, specialInstructions: text})}
+              placeholder="Enter special instructions"
+              multiline
+              numberOfLines={3}
+            />
+          </View>
 
-          <AutoCompleteInput
-            label="Pickup Phone"
-            value={formData.pickupPhone}
-            onChangeText={(value) => handleInputChange('pickupPhone', value)}
-            placeholder="(XXX) XXX-XXXX"
-            type="phone"
-          />
-
-          <AutoCompleteInput
-            label="PO/Pickup Number"
-            value={formData.pickupNumber}
-            onChangeText={(value) => handleInputChange('pickupNumber', value)}
-            placeholder="PO-123456"
-            type="company"
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📅 Appointment Details</Text>
-
-          <AutoCompleteInput
-            label="Appointment Date"
-            value={formData.appointmentDate}
-            onChangeText={(value) =>
-              handleInputChange('appointmentDate', value)
-            }
-            placeholder="MM/DD/YYYY"
-            type="company"
-          />
-
-          <AutoCompleteInput
-            label="Appointment Time"
-            value={formData.appointmentTime}
-            onChangeText={(value) =>
-              handleInputChange('appointmentTime', value)
-            }
-            placeholder="HH:MM AM/PM"
-            type="company"
-          />
+          <TouchableOpacity
+            style={[styles.submitButton, isLoading && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader size={20} color="#FFFFFF" />
+            ) : (
+              <CheckCircle size={20} color="#FFFFFF" />
+            )}
+            <Text style={styles.submitButtonText}>
+              {isLoading ? 'Submitting...' : 'Submit Inbound Check-In'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={
-            [
-              styles.submitButton,
-              {
-                backgroundColor: isWithinGeofence ? '#3B82F6' : '#6B7280',
-                opacity: isWithinGeofence ? 1 : 0.5,
-              },
-            ] as any
-          }
-          onPress={handleSubmitCheckIn}
-          disabled={!isWithinGeofence}
-        >
-          <Package size={20} color="#FFFFFF" />
-          <Text style={styles.submitButtonText}>Submit Inbound Check-In</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -348,80 +268,76 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E293B',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    backgroundColor: '#1E293B',
     borderBottomWidth: 1,
     borderBottomColor: '#334155',
   },
   backButton: {
-    marginRight: 12,
     padding: 4,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
-  loadingText: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    marginTop: 16,
-  },
-  locationStatus: {
-    margin: 16,
-    padding: 16,
-    borderRadius: 8,
-  },
-  locationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  locationText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  locationSubtext: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
+  headerRight: {
+    width: 32,
   },
   content: {
     flex: 1,
+    padding: 16,
   },
-  section: {
-    margin: 16,
-    marginBottom: 24,
+  form: {
+    gap: 20,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#334155',
+  inputGroup: {
+    gap: 8,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#94A3B8',
+  },
+  input: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   submitButton: {
+    backgroundColor: '#3B82F6',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
     borderRadius: 8,
+    gap: 8,
+    marginTop: 20,
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#6B7280',
   },
   submitButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
     color: '#FFFFFF',
-    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

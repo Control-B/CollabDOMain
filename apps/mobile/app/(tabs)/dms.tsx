@@ -22,13 +22,16 @@ import {
   MoreHorizontal,
   Star,
 } from 'lucide-react-native';
-import { useChatStore } from '@/store/chatStore';
+// import { useChatStore } from 'apps/mobile/store/chatStore';
 import { router } from 'expo-router';
 
 export default function DMsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
-  const { directMessages, users, currentUser } = useChatStore();
+  // const { directMessages, users, currentUser } = useChatStore();
+  const directMessages: any[] = [];
+  const users: any[] = [];
+  const currentUser = { id: '1', name: 'User' };
 
   const filteredDMs = useMemo(() => {
     const lower = searchQuery.toLowerCase();
@@ -58,6 +61,11 @@ export default function DMsScreen() {
     const otherUser = users.find(
       (u) => dm.participants.includes(u.id) && u.id !== currentUser.id
     );
+    console.log('Navigating to DM:', { 
+      dmId: dm.id, 
+      otherUserName: otherUser?.name, 
+      title: otherUser?.name || 'Direct Message' 
+    });
     router.push({
       pathname: '/chat/[id]',
       params: {

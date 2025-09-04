@@ -19,8 +19,8 @@ import {
   RotateCcw,
 } from 'lucide-react-native';
 import { router } from 'expo-router';
-import SignaturePad from '@/components/SignaturePad';
-import SignaturePreview from '@/components/SignaturePreview';
+// import SignaturePad from '@/components/SignaturePad';
+// import SignaturePreview from '@/components/SignaturePreview';
 // storage is loaded lazily to avoid native crashes when unavailable
 
 function ErrorBoundary({ children }: { children: React.ReactNode }) {

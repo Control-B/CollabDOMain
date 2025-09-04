@@ -77,8 +77,8 @@ const defaults: Channel[] = [
   },
   // Sample channels with vehicle IDs and door numbers for testing search
   {
-    name: 'TRK-001-Delivery',
-    description: 'Amazon delivery route',
+    name: 'PO-12345',
+    description: 'Amazon delivery route - TRK-001',
     poNumber: 'PO-12345',
     doorNumber: 'D-15',
     vehicleNumber: 'TRK-001',
@@ -90,8 +90,8 @@ const defaults: Channel[] = [
     createdBy: 'dispatch@company.com',
   },
   {
-    name: 'VAN-205-Pickup',
-    description: 'Walmart pickup run',
+    name: 'PO-67890',
+    description: 'Walmart pickup run - VAN-205',
     poNumber: 'PO-67890',
     doorNumber: 'D-08',
     vehicleNumber: 'VAN-205',
@@ -103,8 +103,8 @@ const defaults: Channel[] = [
     createdBy: 'dispatch@company.com',
   },
   {
-    name: 'BIG-RIG-303',
-    description: 'Cross-country haul to Texas',
+    name: 'PO-11111',
+    description: 'Cross-country haul to Texas - BIG-RIG-303',
     poNumber: 'PO-11111',
     doorNumber: 'D-22',
     vehicleNumber: 'BIG-RIG-303',

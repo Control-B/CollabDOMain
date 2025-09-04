@@ -355,8 +355,40 @@ function ChatPageInner() {
   const [checkins, setCheckins] = useState<DriverCheckin[]>([]);
   useEffect(() => {
     // refresh on mount (seed may happen lazily)
-    setCheckins(listCheckins());
+    const localCheckins = listCheckins();
+    
+    // Also fetch mobile check-ins
+    fetch('/api/driver-checkins')
+      .then(response => response.json())
+      .then(mobileCheckins => {
+        // Combine local and mobile check-ins
+        const allCheckins = [...mobileCheckins, ...localCheckins];
+        setCheckins(allCheckins);
+      })
+      .catch(() => {
+        // If mobile check-ins fail, just use local ones
+        setCheckins(localCheckins);
+      });
   }, []);
+  
+  // Refresh check-ins periodically to get new mobile check-ins
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const localCheckins = listCheckins();
+      fetch('/api/driver-checkins')
+        .then(response => response.json())
+        .then(mobileCheckins => {
+          const allCheckins = [...mobileCheckins, ...localCheckins];
+          setCheckins(allCheckins);
+        })
+        .catch(() => {
+          setCheckins(localCheckins);
+        });
+    }, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+  
   // No persisted view; forms are rendered stacked with adaptive columns
   useEffect(() => {
     if (!notifOpen) return;
