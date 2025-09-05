@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Alert,
+  TextInput,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
@@ -18,6 +21,7 @@ import {
   Loader,
 } from 'lucide-react-native';
 import AutoCompleteInput from '../../components/AutoCompleteInput';
+import { Socket } from 'phoenix';
 
 interface CheckInFormData {
   driverName: string;
@@ -37,7 +41,6 @@ export default function OutboundCheckInScreen() {
   const router = useRouter();
   const [isLocationChecking, setIsLocationChecking] = useState(true);
   const [isWithinGeofence, setIsWithinGeofence] = useState(false);
-  // currentLocation omitted to avoid unused var warning
   const [formData, setFormData] = useState<CheckInFormData>({
     driverName: '',
     phoneNumber: '',
@@ -51,10 +54,47 @@ export default function OutboundCheckInScreen() {
     appointmentTime: '',
     loadType: '',
   });
+  const [poNumber, setPoNumber] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [overrideReason, setOverrideReason] = useState('');
 
   useEffect(() => {
+    // Connect to Phoenix for notifications and presence
+    const token = 'dev:driver-1';
+    const socket = new Socket(
+      `${process.env.WEBSOCKET_URL || 'ws://localhost:4000'}/socket`,
+      {
+        params: { token, user_id: 'driver-1' },
+      }
+    );
+    socket.connect();
+
+    // Join notifications channel (presence behavior mirrored)
+    const notifChannel = socket.channel('notifications:shipping_office', {
+      user: { id: 'driver-1', name: 'Driver One' },
+    });
+    notifChannel.join();
+
+    notifChannel.on('channel_created', (payload: any) => {
+      if (
+        payload?.id &&
+        payload.id.startsWith('po:') &&
+        payload.po_number === poNumber
+      ) {
+        router.replace(`/chat/${payload.id}`);
+      }
+    });
+
+    return () => {
+      notifChannel.leave();
+      socket.disconnect();
+    };
+  }, [poNumber]);
+
+  useEffect(() => {
+    // Check location permissions and geofence on component mount
     checkLocationPermissionAndGeofence();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkLocationPermissionAndGeofence = async () => {
@@ -94,8 +134,8 @@ export default function OutboundCheckInScreen() {
     location: Location.LocationObject
   ): boolean => {
     // Simulate geofence check - in real app, calculate distance to delivery location
-    // For demo, randomly determine if within geofence (you can set this to true for testing)
-    return Math.random() > 0.3; // 70% chance of being within geofence
+    // For demo, randomly determine if within 0.5 mile geofence
+    return Math.random() > 0.7; // 30% chance of being within geofence (simulating real scenario)
   };
 
   const handleInputChange = (field: keyof CheckInFormData, value: string) => {
@@ -122,6 +162,109 @@ export default function OutboundCheckInScreen() {
     return true;
   };
 
+  const sendCheckIn = async () => {
+    const checkInData = {
+      type: 'outbound',
+      driverName: formData.driverName,
+      phoneNumber: formData.phoneNumber,
+      vehicleId: formData.vehicleId,
+      trailerNumber: formData.trailerNumber,
+      companyName: formData.deliveryLocation,
+      deliveryAddress: formData.deliveryAddress,
+      deliveryPhone: formData.deliveryPhone,
+      poNumber: poNumber,
+      appointmentDate: formData.appointmentDate,
+      appointmentTime: formData.appointmentTime,
+      loadType: formData.loadType,
+      submittedAt: new Date().toISOString(),
+      location: 'Outbound Terminal',
+      isGeofenceOverride: !isWithinGeofence,
+      overrideReason: overrideReason || null,
+    };
+
+    // Send to our web app backend
+    const res = await fetch('http://localhost:3010/api/checkin-notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(checkInData),
+    });
+    
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data?.error || 'Failed to submit check-in');
+    }
+    
+    // Return formatted data for the success popup
+    return {
+      driverName: formData.driverName,
+      companyName: formData.deliveryLocation,
+      vehicleId: formData.vehicleId,
+      poNumber: poNumber,
+      appointmentDate: formData.appointmentDate,
+      appointmentTime: formData.appointmentTime,
+    };
+  };
+
+  const handleOverrideCheckIn = () => {
+    console.log('🔧 Override button clicked');
+    console.log('📝 Form data:', formData);
+    if (!validateForm()) {
+      console.log('❌ Form validation failed');
+      return;
+    }
+    console.log('✅ Form validation passed, showing override modal');
+    setShowOverrideModal(true);
+  };
+
+  const submitOverrideCheckIn = async () => {
+    if (!overrideReason.trim()) {
+      Alert.alert('Override Reason Required', 'Please provide a reason for checking in outside the geofence.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      console.log('🚀 Submitting override check-in...');
+      
+      const checkInData = await sendCheckIn();
+      console.log('✅ Override check-in response:', checkInData);
+      
+      // Close modal first
+      setShowOverrideModal(false);
+      console.log('🔒 Modal closed, waiting before showing success...');
+      
+      // Longer delay to ensure modal is fully closed before showing alert
+      setTimeout(() => {
+        console.log('🎉 Now showing success popup for override check-in');
+        Alert.alert(
+          'Check-In Submitted Successfully! ✅',
+          `Your outbound check-in has been sent to the shipping office:
+
+Driver: ${checkInData.driverName}
+Company: ${checkInData.companyName}
+Vehicle ID: ${checkInData.vehicleId}
+PO Number: ${checkInData.poNumber}
+Date: ${checkInData.appointmentDate}
+Time: ${checkInData.appointmentTime}
+
+⚠️ Override Reason: ${overrideReason}
+
+The shipping office will create a communication channel for your trip shortly.`,
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }, 800); // Increased delay significantly
+    } catch (e: any) {
+      console.error('override checkin submit failed', e);
+      setShowOverrideModal(false);
+      setTimeout(() => {
+        Alert.alert('Error', 'Failed to submit check-in. Please try again.');
+      }, 100);
+    } finally {
+      setSubmitting(false);
+      setOverrideReason('');
+    }
+  };
+
   const handleSubmitCheckIn = () => {
     if (!isWithinGeofence) {
       Alert.alert(
@@ -143,13 +286,30 @@ export default function OutboundCheckInScreen() {
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Submit',
-          onPress: () => {
-            // In real app, submit to backend
-            Alert.alert(
-              'Check-In Submitted',
-              'Your check-in has been submitted to the shipping office. They will create a communication channel for your trip.',
-              [{ text: 'OK', onPress: () => router.back() }]
-            );
+          onPress: async () => {
+            try {
+              setSubmitting(true);
+              const checkInData = await sendCheckIn();
+              Alert.alert(
+                'Check-In Submitted Successfully! ✅',
+                `Your outbound check-in has been sent to the shipping office:
+
+Driver: ${checkInData.driverName}
+Company: ${checkInData.companyName}
+Vehicle ID: ${checkInData.vehicleId}
+PO Number: ${checkInData.poNumber}
+Date: ${checkInData.appointmentDate}
+Time: ${checkInData.appointmentTime}
+
+The shipping office will create a communication channel for your trip shortly.`,
+                [{ text: 'OK', onPress: () => router.back() }]
+              );
+            } catch (e: any) {
+              console.error('checkin submit failed', e);
+              Alert.alert('Error', 'Failed to submit check-in. Please try again.');
+            } finally {
+              setSubmitting(false);
+            }
           },
         },
       ]
@@ -343,25 +503,109 @@ export default function OutboundCheckInScreen() {
             type="company"
           />
         </View>
+
+        {/* PO Number Input - For Channel Request */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🔗 Communication Channel</Text>
+
+          <TextInput
+            placeholder="PO Number"
+            value={poNumber}
+            onChangeText={setPoNumber}
+            style={styles.poInput}
+          />
+        </View>
       </ScrollView>
 
       {/* Submit Button */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.submitButton,
-            {
-              backgroundColor: isWithinGeofence ? '#8B5CF6' : '#6B7280',
-              opacity: isWithinGeofence ? 1 : 0.5,
-            },
-          ]}
-          onPress={handleSubmitCheckIn}
-          disabled={!isWithinGeofence}
-        >
-          <Send size={20} color="#FFFFFF" />
-          <Text style={styles.submitButtonText}>Submit Outbound Check-In</Text>
-        </TouchableOpacity>
+        {isWithinGeofence ? (
+          <TouchableOpacity
+            style={[styles.submitButton, submitting && { opacity: 0.6 }]}
+            onPress={handleSubmitCheckIn}
+            disabled={submitting}
+          >
+            <Send size={20} color="#FFFFFF" />
+            <Text style={styles.submitButtonText}>
+              {submitting ? 'Submitting...' : 'Submit Check-In'}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View>
+            <View style={styles.geofenceWarning}>
+              <AlertCircle size={16} color="#F59E0B" />
+              <Text style={styles.geofenceWarningText}>
+                You are outside the 0.5 mile delivery zone. Use override to check in.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.overrideButton, submitting && { opacity: 0.6 }]}
+              onPress={handleOverrideCheckIn}
+              disabled={submitting}
+            >
+              <AlertCircle size={20} color="#FFFFFF" />
+              <Text style={styles.overrideButtonText}>
+                {submitting ? 'Submitting...' : 'Override Check-In'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
+
+      {/* Override Modal */}
+      <Modal
+        visible={showOverrideModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowOverrideModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Override Check-In</Text>
+            <Text style={styles.modalSubtitle}>
+              You are outside the delivery geofence. Please provide a reason for checking in:
+            </Text>
+            
+            <TextInput
+              style={styles.reasonInput}
+              value={overrideReason}
+              onChangeText={setOverrideReason}
+              placeholder="Enter reason (e.g., Traffic, Customer request, etc.)"
+              placeholderTextColor="#9CA3AF"
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => {
+                  setShowOverrideModal(false);
+                  setOverrideReason('');
+                }}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.confirmButton, submitting && { opacity: 0.6 }]}
+                onPress={submitOverrideCheckIn}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <AlertCircle size={18} color="#FFFFFF" />
+                )}
+                <Text style={styles.confirmButtonText}>
+                  {submitting ? 'Submitting...' : 'Submit Override'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -432,13 +676,31 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginBottom: 16,
   },
-
+  poInput: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 12,
+    color: '#FFFFFF',
+  },
+  requestButton: {
+    backgroundColor: '#111827',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  requestButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
   footer: {
     padding: 16,
     borderTopWidth: 1,
     borderTopColor: '#334155',
   },
   submitButton: {
+    backgroundColor: '#10B981',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -450,5 +712,105 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginLeft: 8,
+  },
+  geofenceWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  geofenceWarningText: {
+    fontSize: 14,
+    color: '#92400E',
+    marginLeft: 8,
+    flex: 1,
+  },
+  overrideButton: {
+    backgroundColor: '#F59E0B',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 8,
+  },
+  overrideButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    marginBottom: 16,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  reasonInput: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#1F2937',
+    backgroundColor: '#F9FAFB',
+    marginBottom: 20,
+    minHeight: 80,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  confirmButton: {
+    flex: 1,
+    backgroundColor: '#F59E0B',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 6,
   },
 });

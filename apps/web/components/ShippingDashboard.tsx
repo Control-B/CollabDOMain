@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import { Socket } from 'phoenix';
+import NewPOChannelModal from './NewPOChannelModal';
 
 interface CheckInNotification {
   id: string;
-  type: 'geofence_checkin';
+  type: 'geofence_checkin' | 'mobile_checkin';
   title: string;
   message: string;
   tripSheet: TripSheetSummary;
@@ -32,6 +34,8 @@ interface CheckInNotification {
   isRead: boolean;
   channelCreated: boolean;
   channelId?: string;
+  isGeofenceOverride?: boolean;
+  overrideReason?: string;
 }
 
 interface TripSheetSummary {
@@ -84,7 +88,48 @@ export const ShippingDashboard: React.FC = () => {
     search: '',
   });
 
-  // Fetch check-in notifications
+  // Live events via Phoenix
+  const [events, setEvents] = useState<any[]>([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalDefaults, setModalDefaults] = useState<{
+    po: string;
+    driverId?: string;
+    tripId?: string;
+  }>({ po: '', driverId: undefined, tripId: 'ts-1' });
+  // Track a notification to delete after creating a channel from it
+  const [pendingDeleteNotificationId, setPendingDeleteNotificationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Connect to Phoenix and subscribe to shipping office notifications
+    const endpoint = (process.env.NEXT_PUBLIC_WS_URL as string) || 'ws://localhost:4000/socket';
+    const socket = new Socket(endpoint, {
+      params: { token: 'anonymous', user_id: 'clerk-1' },
+    });
+    socket.connect();
+
+    const chan = socket.channel('notifications:shipping_office', {
+      user: { id: 'clerk-1', name: 'Clerk' },
+    });
+
+    chan.on('checkin_requested', (p: any) =>
+      setEvents((e) => [{ type: 'checkin_requested', p, t: Date.now() }, ...e].slice(0, 50)),
+    );
+    chan.on('channel_created', (p: any) =>
+      setEvents((e) => [{ type: 'channel_created', p, t: Date.now() }, ...e].slice(0, 50)),
+    );
+
+    chan.join();
+
+    return () => {
+      chan.leave();
+      socket.disconnect();
+    };
+  }, []);
+
+  const lastCheckin = useMemo(() => events.find((e) => e.type === 'checkin_requested'), [events]);
+  const lastCheckinPO = lastCheckin?.p?.po_number || '';
+
+  // Fetch check-in notifications (polling/REST)
   const {
     data: notifications = [],
     isLoading,
@@ -124,37 +169,45 @@ export const ShippingDashboard: React.FC = () => {
     },
   });
 
-  // Create channel from notification
-  const createChannelMutation = useMutation({
-    mutationFn: async (notification: CheckInNotification) => {
-      const response = await fetch('/api/channels/create-from-checkin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          notificationId: notification.id,
-          channelName: `Trip-${notification.tripSheet.tripNumber}-${notification.location.name}`,
-          description: `Communication channel for ${notification.tripSheet.tripNumber} at ${notification.location.name}`,
-          tripNumber: notification.tripSheet.tripNumber,
-          driverName: notification.tripSheet.driverName,
-          locationName: notification.location.name,
-        }),
+  // Delete notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const res = await fetch(`/api/checkin-notifications/${notificationId}`, {
+        method: 'DELETE',
       });
-
-      if (!response.ok) throw new Error('Failed to create channel');
-      return response.json();
+      if (!res.ok) throw new Error('Failed to delete notification');
+      return res.json();
     },
-    onSuccess: (data, notification) => {
-      toast.success(`Channel created: ${data.channelName}`);
+    onSuccess: () => {
+      setPendingDeleteNotificationId(null);
       queryClient.invalidateQueries({ queryKey: ['checkin-notifications'] });
-
-      // Navigate to the new channel
-      window.open(`/channels/${data.channelId}`, '_blank');
+      toast.success('Notification removed after channel creation');
     },
     onError: (error) => {
-      toast.error('Failed to create channel');
-      console.error('Channel creation error:', error);
+      console.error('Failed to delete notification:', error);
+      toast.error('Failed to remove notification');
     },
   });
+
+  // Helper to open modal with defaults
+  const openCreateModalFromEvent = (evt: any) => {
+    setModalDefaults({
+      po: evt?.p?.po_number || '',
+      driverId: evt?.p?.driver_id || undefined,
+      tripId: evt?.p?.trip_sheet_id || 'ts-1',
+    });
+    setPendingDeleteNotificationId(null);
+    setModalOpen(true);
+  };
+  const openCreateModalFromNotification = (n: CheckInNotification) => {
+    setModalDefaults({
+      po: n.tripSheet?.pickupPoNumber || '',
+      driverId: undefined, // not available on this notification payload
+      tripId: 'ts-1',
+    });
+    setPendingDeleteNotificationId(n.id);
+    setModalOpen(true);
+  };
 
   // Statistics
   const stats = useMemo(() => {
@@ -215,10 +268,6 @@ export const ShippingDashboard: React.FC = () => {
     }
   };
 
-  const handleCreateChannel = (notification: CheckInNotification) => {
-    createChannelMutation.mutate(notification);
-  };
-
   const formatCheckInType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
@@ -228,6 +277,7 @@ export const ShippingDashboard: React.FC = () => {
   };
 
   const getStatusBadgeColor = (notification: CheckInNotification) => {
+    if (notification.isGeofenceOverride) return 'bg-orange-100 text-orange-800';
     if (!notification.isRead) return 'bg-blue-100 text-blue-800';
     if (notification.channelCreated) return 'bg-green-100 text-green-800';
     return 'bg-gray-100 text-gray-800';
@@ -263,6 +313,44 @@ export const ShippingDashboard: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
             Shipping Dashboard
           </h1>
+
+          {/* Live check-ins quick action */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-700">Live check-ins</div>
+              <button
+                disabled={!lastCheckinPO}
+                onClick={() => lastCheckin && openCreateModalFromEvent(lastCheckin)}
+                className="text-xs inline-flex items-center px-2.5 py-1.5 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <MessageSquare className="h-3.5 w-3.5 mr-1" /> Create from latest
+              </button>
+            </div>
+            {events.length === 0 ? (
+              <div className="text-xs text-gray-500">Waiting for check-ins…</div>
+            ) : (
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {events
+                  .filter((e) => e.type === 'checkin_requested')
+                  .slice(0, 5)
+                  .map((e, idx) => (
+                    <div key={idx} className="border border-gray-200 rounded-md p-2">
+                      <div className="text-xs text-gray-500 mb-1">{new Date(e.t).toLocaleTimeString()}</div>
+                      <div className="text-sm font-medium text-gray-900 mb-1">PO {e.p?.po_number || '—'}</div>
+                      <div className="text-xs text-gray-600 mb-2">Driver: {e.p?.driver_id || 'unknown'} • Trip: {e.p?.trip_sheet_id || '—'}</div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => openCreateModalFromEvent(e)}
+                          className="text-xs inline-flex items-center px-2.5 py-1.5 rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5 mr-1" /> Create channel
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
 
           {/* Statistics */}
           <div className="grid grid-cols-2 gap-4 mb-4">
@@ -442,6 +530,15 @@ export const ShippingDashboard: React.FC = () => {
                     📍 {notification.location.name}
                   </p>
 
+                  {notification.isGeofenceOverride && (
+                    <div className="mb-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Geofence Override
+                      </span>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-500">
                       PO: {notification.tripSheet.pickupPoNumber}
@@ -468,6 +565,12 @@ export const ShippingDashboard: React.FC = () => {
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     Trip {selectedNotification.tripSheet.tripNumber} Check-In
+                    {selectedNotification.isGeofenceOverride && (
+                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Override
+                      </span>
+                    )}
                   </h2>
                   <p className="text-sm text-gray-600">
                     {formatCheckInType(
@@ -480,14 +583,11 @@ export const ShippingDashboard: React.FC = () => {
                 <div className="flex space-x-3">
                   {!selectedNotification.channelCreated && (
                     <button
-                      onClick={() => handleCreateChannel(selectedNotification)}
-                      disabled={createChannelMutation.isPending}
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50"
+                      onClick={() => openCreateModalFromNotification(selectedNotification)}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700"
                     >
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      {createChannelMutation.isPending
-                        ? 'Creating...'
-                        : 'Create Channel'}
+                      Create Channel
                     </button>
                   )}
 
@@ -641,6 +741,32 @@ export const ShippingDashboard: React.FC = () => {
                         </dd>
                       </div>
                     )}
+
+                    {selectedNotification.isGeofenceOverride && (
+                      <>
+                        <div>
+                          <dt className="text-sm font-medium text-gray-500">
+                            Geofence Status
+                          </dt>
+                          <dd className="text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Override Used
+                            </span>
+                          </dd>
+                        </div>
+                        {selectedNotification.overrideReason && (
+                          <div>
+                            <dt className="text-sm font-medium text-gray-500">
+                              Override Reason
+                            </dt>
+                            <dd className="text-sm text-gray-900">
+                              {selectedNotification.overrideReason}
+                            </dd>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </dl>
                 </div>
 
@@ -789,6 +915,26 @@ export const ShippingDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Modal for creating channels */}
+      <NewPOChannelModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        defaultPO={modalDefaults.po}
+        defaultDriverId={modalDefaults.driverId}
+        defaultTripId={modalDefaults.tripId}
+        onCreated={(id) => {
+          // If we created this from a notification, delete it now
+          if (pendingDeleteNotificationId) {
+            deleteNotificationMutation.mutate(pendingDeleteNotificationId);
+          }
+          setModalOpen(false);
+          // Delay navigation to allow deletion to complete
+          setTimeout(() => {
+            window.location.href = `/chat?channel=${encodeURIComponent(id)}`;
+          }, 500);
+        }}
+      />
     </div>
   );
 };
