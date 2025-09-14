@@ -356,11 +356,11 @@ function ChatPageInner() {
   useEffect(() => {
     // refresh on mount (seed may happen lazily)
     const localCheckins = listCheckins();
-    
+
     // Also fetch mobile check-ins
     fetch('/api/driver-checkins')
-      .then(response => response.json())
-      .then(mobileCheckins => {
+      .then((response) => response.json())
+      .then((mobileCheckins) => {
         // Combine local and mobile check-ins
         const allCheckins = [...mobileCheckins, ...localCheckins];
         setCheckins(allCheckins);
@@ -370,14 +370,14 @@ function ChatPageInner() {
         setCheckins(localCheckins);
       });
   }, []);
-  
+
   // Refresh check-ins periodically to get new mobile check-ins
   useEffect(() => {
     const interval = setInterval(() => {
       const localCheckins = listCheckins();
       fetch('/api/driver-checkins')
-        .then(response => response.json())
-        .then(mobileCheckins => {
+        .then((response) => response.json())
+        .then((mobileCheckins) => {
           const allCheckins = [...mobileCheckins, ...localCheckins];
           setCheckins(allCheckins);
         })
@@ -388,7 +388,7 @@ function ChatPageInner() {
 
     return () => clearInterval(interval);
   }, []);
-  
+
   // No persisted view; forms are rendered stacked with adaptive columns
   useEffect(() => {
     if (!notifOpen) return;
@@ -707,6 +707,37 @@ function ChatPageInner() {
     }
   }, [activeChannel, allChannels, viewerLang]);
 
+  const onStartVideoCall = useCallback(() => {
+    const channel = allChannels.find(
+      (c) => c.name.toLowerCase() === activeChannel.toLowerCase(),
+    );
+    const recipient = channel?.isDM
+      ? channel.name.replace(/^DM:\s*/, '')
+      : channel?.createdBy || activeChannel;
+
+    // Navigate to the calls page to start a video call
+    try {
+      window.open('/calls', '_blank');
+    } catch {
+      // Drop a message as fallback
+      setUserMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          body: `📹 Started video call with ${recipient}`,
+          time: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          dateMs: Date.now(),
+          isOwner: true,
+          lang: viewerLang,
+        },
+      ]);
+      scrollToBottom();
+    }
+  }, [activeChannel, allChannels, viewerLang]);
+
   const onShareLocation = useCallback(async () => {
     setLocOpen(true);
     setLocLoading(true);
@@ -843,8 +874,8 @@ function ChatPageInner() {
       const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
         ? 'video/webm;codecs=vp9'
         : MediaRecorder.isTypeSupported('video/webm')
-          ? 'video/webm'
-          : '';
+        ? 'video/webm'
+        : '';
       const rec = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
       videoChunksRef.current = [];
       rec.ondataavailable = (ev) => {
@@ -861,7 +892,9 @@ function ChatPageInner() {
           hour: '2-digit',
           minute: '2-digit',
         });
-        const filename = `video-${now.toISOString().replace(/[:.]/g, '-')}.webm`;
+        const filename = `video-${now
+          .toISOString()
+          .replace(/[:.]/g, '-')}.webm`;
         const id = crypto.randomUUID();
         mediaSrcMapRef.current[id] = { type: 'video', url };
         setUserMessages((prev) => [
@@ -917,7 +950,9 @@ function ChatPageInner() {
           hour: '2-digit',
           minute: '2-digit',
         });
-        const filename = `voice-${now.toISOString().replace(/[:.]/g, '-')}.webm`;
+        const filename = `voice-${now
+          .toISOString()
+          .replace(/[:.]/g, '-')}.webm`;
         const id = crypto.randomUUID();
         mediaSrcMapRef.current[id] = { type: 'audio', url };
         setUserMessages((prev) => [
@@ -1118,14 +1153,14 @@ function ChatPageInner() {
     lang === 'es'
       ? 'es-ES'
       : lang === 'fr'
-        ? 'fr-FR'
-        : lang === 'ar'
-          ? 'ar-SA'
-          : lang === 'hi'
-            ? 'hi-IN'
-            : lang === 'zh'
-              ? 'zh-CN'
-              : 'en-US';
+      ? 'fr-FR'
+      : lang === 'ar'
+      ? 'ar-SA'
+      : lang === 'hi'
+      ? 'hi-IN'
+      : lang === 'zh'
+      ? 'zh-CN'
+      : 'en-US';
 
   const speakTranslated = useCallback(
     async (text: string) => {
@@ -1253,7 +1288,11 @@ function ChatPageInner() {
         )}
         {/* Left Sidebar as Drawer */}
         <aside
-          className={`z-40 inset-y-0 left-0 w-72 flex-col border-r border-gray-800 bg-gray-900 transform transition-transform duration-200 fixed ${drawerOpen ? 'translate-x-0' : '-translate-x-full'} md:static md:transform-none md:transition-none ${drawerOpen ? 'md:flex' : 'md:hidden'}`}
+          className={`z-40 inset-y-0 left-0 w-72 flex-col border-r border-gray-800 bg-gray-900 transform transition-transform duration-200 fixed ${
+            drawerOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:static md:transform-none md:transition-none ${
+            drawerOpen ? 'md:flex' : 'md:hidden'
+          }`}
         >
           {/* Workspace header */}
           <div className="px-3 h-14 flex items-center border-b border-gray-800">
@@ -1265,7 +1304,11 @@ function ChatPageInner() {
           {/* Filter */}
           <div className="px-3 py-2 border-b border-gray-800">
             <div
-              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-300 ${filter.trim().length > 0 ? 'bg-indigo-900/30 border border-indigo-700' : 'bg-gray-800'}`}
+              className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-sm text-gray-300 ${
+                filter.trim().length > 0
+                  ? 'bg-indigo-900/30 border border-indigo-700'
+                  : 'bg-gray-800'
+              }`}
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M10 4a6 6 0 100 12 6 6 0 000-12zm8.707 13.293l-3.387-3.387a8 8 0 10-1.414 1.414l3.387 3.387a1 1 0 001.414-1.414z" />
@@ -1309,7 +1352,9 @@ function ChatPageInner() {
                   title={openChannels ? 'Collapse' : 'Expand'}
                 >
                   <svg
-                    className={`w-4 h-4 transition-transform ${openChannels ? 'rotate-90' : ''}`}
+                    className={`w-4 h-4 transition-transform ${
+                      openChannels ? 'rotate-90' : ''
+                    }`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -1356,21 +1401,20 @@ function ChatPageInner() {
                                   unread: 'bg-blue-900/40 text-blue-200',
                                 }
                               : type === 'outbound'
-                                ? {
-                                    active:
-                                      'bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-400/30',
-                                    base: 'bg-fuchsia-900/15 text-fuchsia-200 border border-fuchsia-800/40 hover:bg-fuchsia-900/25',
-                                    hash: 'text-fuchsia-400',
-                                    unread:
-                                      'bg-fuchsia-900/40 text-fuchsia-200',
-                                  }
-                                : {
-                                    active:
-                                      'bg-slate-600/20 text-slate-200 border border-slate-500/30',
-                                    base: 'bg-slate-800/30 text-slate-200 border border-slate-700 hover:bg-slate-800/40',
-                                    hash: 'text-indigo-400',
-                                    unread: 'bg-indigo-900/50 text-indigo-200',
-                                  };
+                              ? {
+                                  active:
+                                    'bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-400/30',
+                                  base: 'bg-fuchsia-900/15 text-fuchsia-200 border border-fuchsia-800/40 hover:bg-fuchsia-900/25',
+                                  hash: 'text-fuchsia-400',
+                                  unread: 'bg-fuchsia-900/40 text-fuchsia-200',
+                                }
+                              : {
+                                  active:
+                                    'bg-slate-600/20 text-slate-200 border border-slate-500/30',
+                                  base: 'bg-slate-800/30 text-slate-200 border border-slate-700 hover:bg-slate-800/40',
+                                  hash: 'text-indigo-400',
+                                  unread: 'bg-indigo-900/50 text-indigo-200',
+                                };
                           return (
                             <button
                               key={c.name}
@@ -1415,7 +1459,11 @@ function ChatPageInner() {
                                       setAllChannels(list);
                                     } catch {}
                                   }}
-                                  className={`text-[10px] px-1.5 py-0.5 rounded border ${c.pinned ? 'bg-yellow-700/30 text-yellow-300 border-yellow-700/40' : 'text-gray-400 border-gray-700 hover:bg-gray-800'}`}
+                                  className={`text-[10px] px-1.5 py-0.5 rounded border ${
+                                    c.pinned
+                                      ? 'bg-yellow-700/30 text-yellow-300 border-yellow-700/40'
+                                      : 'text-gray-400 border-gray-700 hover:bg-gray-800'
+                                  }`}
                                   title={
                                     c.pinned ? 'Unpin channel' : 'Pin channel'
                                   }
@@ -1443,8 +1491,8 @@ function ChatPageInner() {
                             c.name.toLowerCase() === 'inbound'
                               ? '/channels/inbound'
                               : c.name.toLowerCase() === 'outbound'
-                                ? '/channels/outbound'
-                                : '/channels/general';
+                              ? '/channels/outbound'
+                              : '/channels/general';
                           const type = c.name.toLowerCase();
                           const isActive = activeChannel.toLowerCase() === type;
                           const colors =
@@ -1457,21 +1505,20 @@ function ChatPageInner() {
                                   unread: 'bg-blue-900/40 text-blue-200',
                                 }
                               : type === 'outbound'
-                                ? {
-                                    active:
-                                      'bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-400/30',
-                                    base: 'bg-fuchsia-900/15 text-fuchsia-200 border border-fuchsia-800/40 hover:bg-fuchsia-900/25',
-                                    hash: 'text-fuchsia-400',
-                                    unread:
-                                      'bg-fuchsia-900/40 text-fuchsia-200',
-                                  }
-                                : {
-                                    active:
-                                      'bg-slate-600/20 text-slate-200 border border-slate-500/30',
-                                    base: 'bg-slate-800/30 text-slate-200 border border-slate-700 hover:bg-slate-800/40',
-                                    hash: 'text-indigo-400',
-                                    unread: 'bg-indigo-900/50 text-indigo-200',
-                                  };
+                              ? {
+                                  active:
+                                    'bg-fuchsia-500/10 text-fuchsia-200 border border-fuchsia-400/30',
+                                  base: 'bg-fuchsia-900/15 text-fuchsia-200 border border-fuchsia-800/40 hover:bg-fuchsia-900/25',
+                                  hash: 'text-fuchsia-400',
+                                  unread: 'bg-fuchsia-900/40 text-fuchsia-200',
+                                }
+                              : {
+                                  active:
+                                    'bg-slate-600/20 text-slate-200 border border-slate-500/30',
+                                  base: 'bg-slate-800/30 text-slate-200 border border-slate-700 hover:bg-slate-800/40',
+                                  hash: 'text-indigo-400',
+                                  unread: 'bg-indigo-900/50 text-indigo-200',
+                                };
                           return (
                             <Link
                               key={c.name}
@@ -1523,7 +1570,9 @@ function ChatPageInner() {
                   title={openDMs ? 'Collapse' : 'Expand'}
                 >
                   <svg
-                    className={`w-4 h-4 transition-transform ${openDMs ? 'rotate-90' : ''}`}
+                    className={`w-4 h-4 transition-transform ${
+                      openDMs ? 'rotate-90' : ''
+                    }`}
                     viewBox="0 0 20 20"
                     fill="currentColor"
                   >
@@ -1564,10 +1613,14 @@ function ChatPageInner() {
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-md group hover:bg-indigo-900/20"
                         >
                           <span
-                            className={`relative inline-block w-2 h-2 rounded-full ${d.online ? 'bg-green-400' : 'bg-gray-500'}`}
+                            className={`relative inline-block w-2 h-2 rounded-full ${
+                              d.online ? 'bg-green-400' : 'bg-gray-500'
+                            }`}
                           ></span>
                           <span
-                            className={`text-sm truncate ${d.online ? 'text-gray-100' : 'text-gray-300'}`}
+                            className={`text-sm truncate ${
+                              d.online ? 'text-gray-100' : 'text-gray-300'
+                            }`}
                           >
                             {d.name}
                           </span>
@@ -1689,7 +1742,9 @@ function ChatPageInner() {
                 title={drawerOpen ? 'Hide menu' : 'Show menu'}
               >
                 <svg
-                  className={`w-5 h-5 text-indigo-300 transform transition-transform duration-200 ${drawerOpen ? '-scale-x-100' : ''}`}
+                  className={`w-5 h-5 text-indigo-300 transform transition-transform duration-200 ${
+                    drawerOpen ? '-scale-x-100' : ''
+                  }`}
                   viewBox="0 0 24 24"
                   fill="none"
                 >
@@ -1725,8 +1780,8 @@ function ChatPageInner() {
                     cat === 'inbound'
                       ? 'from-sky-500/25 to-blue-600/25 text-sky-200 border-sky-400/40 shadow-sky-900/30'
                       : cat === 'outbound'
-                        ? 'from-fuchsia-500/25 to-pink-600/25 text-fuchsia-200 border-fuchsia-400/40 shadow-fuchsia-900/30'
-                        : 'from-slate-600/30 to-slate-700/30 text-slate-200 border-slate-500/40 shadow-black/20';
+                      ? 'from-fuchsia-500/25 to-pink-600/25 text-fuchsia-200 border-fuchsia-400/40 shadow-fuchsia-900/30'
+                      : 'from-slate-600/30 to-slate-700/30 text-slate-200 border-slate-500/40 shadow-black/20';
                   return (
                     <span
                       className={`hidden sm:inline-flex items-center uppercase tracking-wider font-semibold text-[11px] sm:text-xs px-3 py-1 rounded-full bg-gradient-to-r border shadow ${cls}`}
@@ -1842,7 +1897,9 @@ function ChatPageInner() {
                                   (vals.poOrTripNumber &&
                                     vals.poOrTripNumber.trim()) ||
                                   (vals.vehicleId && vals.vehicleId.trim()) ||
-                                  `channel-${new Date().toISOString().slice(0, 10)}`;
+                                  `channel-${new Date()
+                                    .toISOString()
+                                    .slice(0, 10)}`;
                                 let name = baseName;
                                 let suffix = 2;
                                 while (
@@ -1881,7 +1938,9 @@ function ChatPageInner() {
                                 setFilter('');
                                 setNotifOpen(false);
                                 addActivity({
-                                  id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                                  id: `act-${Date.now()}-${Math.random()
+                                    .toString(36)
+                                    .slice(2, 7)}`,
                                   kind: 'channel-created',
                                   timestampISO: new Date().toISOString(),
                                   channelName: name,
@@ -1893,7 +1952,11 @@ function ChatPageInner() {
                                   deliveryNumber:
                                     vals.deliveryNumber || undefined,
                                   createdBy: 'demo@chatdo.com',
-                                  description: `${vals.direction} channel created from driver check-in form • Driver: ${vals.driverName || '—'} • Company: ${vals.company || '—'}`,
+                                  description: `${
+                                    vals.direction
+                                  } channel created from driver check-in form • Driver: ${
+                                    vals.driverName || '—'
+                                  } • Company: ${vals.company || '—'}`,
                                 });
                                 setCheckins((prev) =>
                                   prev.filter((x) => x.id !== c.id),
@@ -1917,7 +1980,11 @@ function ChatPageInner() {
                               </span>
                             </div>
                             <div
-                              className={`${longForm ? 'grid grid-cols-1 md:grid-cols-2 gap-3' : 'space-y-3'}`}
+                              className={`${
+                                longForm
+                                  ? 'grid grid-cols-1 md:grid-cols-2 gap-3'
+                                  : 'space-y-3'
+                              }`}
                             >
                               <label className="block">
                                 <span className="block text-xs text-gray-400 mb-1">
@@ -2046,7 +2113,9 @@ function ChatPageInner() {
                                     : c.vehicleId;
                                   const v = veh || c.vehicleId;
                                   if (v)
-                                    window.location.href = `/driver/${encodeURIComponent(v)}`;
+                                    window.location.href = `/driver/${encodeURIComponent(
+                                      v,
+                                    )}`;
                                 }}
                                 className="inline-flex items-center px-2.5 py-1 rounded-md bg-gray-800 text-gray-200 text-xs border border-gray-700 hover:bg-gray-700"
                               >
@@ -2166,7 +2235,9 @@ function ChatPageInner() {
                             try {
                               // Log rejection activity
                               addActivity({
-                                id: `act-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                                id: `act-${Date.now()}-${Math.random()
+                                  .toString(36)
+                                  .slice(2, 7)}`,
                                 kind: 'checkin-rejected',
                                 timestampISO: new Date().toISOString(),
                                 channelName: undefined,
@@ -2180,7 +2251,11 @@ function ChatPageInner() {
                                 pickupNumber: rejectFor.pickupNumber,
                                 deliveryNumber: rejectFor.deliveryNumber,
                                 createdBy: 'demo@chatdo.com',
-                                description: `Check-in rejected • Reason: ${rejectCategory} • Notes: ${rejectNotes || '—'} • Driver: ${rejectFor.driverName || '—'} • Company: ${rejectFor.company || '—'}`,
+                                description: `Check-in rejected • Reason: ${rejectCategory} • Notes: ${
+                                  rejectNotes || '—'
+                                } • Driver: ${
+                                  rejectFor.driverName || '—'
+                                } • Company: ${rejectFor.company || '—'}`,
                               });
                               // Remove the check-in from the list
                               setCheckins((prev) =>
@@ -2238,7 +2313,9 @@ function ChatPageInner() {
                           className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-gray-800"
                         >
                           <span
-                            className={`relative inline-block w-2 h-2 rounded-full ${m.online ? 'bg-green-400' : 'bg-gray-500'}`}
+                            className={`relative inline-block w-2 h-2 rounded-full ${
+                              m.online ? 'bg-green-400' : 'bg-gray-500'
+                            }`}
                           />
                           <span className="text-sm text-gray-200 truncate">
                             {m.name}
@@ -2359,7 +2436,9 @@ function ChatPageInner() {
                                 onClick={() => {
                                   try {
                                     router.push(
-                                      `/dms?doc=${encodeURIComponent((r as any).docId)}`,
+                                      `/dms?doc=${encodeURIComponent(
+                                        (r as any).docId,
+                                      )}`,
                                     );
                                   } catch {
                                     router.push('/dms');
@@ -2557,7 +2636,11 @@ function ChatPageInner() {
                           Leave Channel
                         </button>
                         <button
-                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-gray-800 ${core ? 'text-gray-500 cursor-not-allowed' : 'text-rose-300'}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-gray-800 ${
+                            core
+                              ? 'text-gray-500 cursor-not-allowed'
+                              : 'text-rose-300'
+                          }`}
                           disabled={core}
                           onClick={() => {
                             if (core) return;
@@ -2619,7 +2702,9 @@ function ChatPageInner() {
                     if (cat !== 'inbound' && cat !== 'outbound') return null;
                     return activeMeta?.vehicleNumber ? (
                       <a
-                        href={`/driver/${encodeURIComponent(activeMeta.vehicleNumber)}`}
+                        href={`/driver/${encodeURIComponent(
+                          activeMeta.vehicleNumber,
+                        )}`}
                         className="inline-flex items-center gap-2 text-xs px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/15"
                         title="View driver details"
                       >
@@ -2665,7 +2750,9 @@ function ChatPageInner() {
                     }`}
                     title={
                       (activeMeta?.doorStatus ?? 'green') === 'green'
-                        ? `Green: movement allowed (back in/leave)${activeMeta?.docsOk ? '' : ' • Docs pending'}`
+                        ? `Green: movement allowed (back in/leave)${
+                            activeMeta?.docsOk ? '' : ' • Docs pending'
+                          }`
                         : 'Red: no movement'
                     }
                   >
@@ -2711,7 +2798,11 @@ function ChatPageInner() {
                                 Authorized to toggle
                               </div>
                               <div
-                                className={`text-[10px] px-1.5 py-0.5 rounded-full border ${activeMeta?.docsOk ? 'bg-green-600/20 text-green-200 border-green-500/30' : 'bg-amber-600/20 text-amber-200 border-amber-500/30'}`}
+                                className={`text-[10px] px-1.5 py-0.5 rounded-full border ${
+                                  activeMeta?.docsOk
+                                    ? 'bg-green-600/20 text-green-200 border-green-500/30'
+                                    : 'bg-amber-600/20 text-amber-200 border-amber-500/30'
+                                }`}
                               >
                                 {activeMeta?.docsOk
                                   ? 'Docs OK'
@@ -2789,7 +2880,11 @@ function ChatPageInner() {
                                 Document readiness
                               </div>
                               <button
-                                className={`text-xs px-2 py-1 rounded-md border ${activeMeta?.docsOk ? 'bg-green-600/20 text-green-200 border-green-500/30' : 'bg-amber-600/20 text-amber-200 border-amber-500/30'}`}
+                                className={`text-xs px-2 py-1 rounded-md border ${
+                                  activeMeta?.docsOk
+                                    ? 'bg-green-600/20 text-green-200 border-green-500/30'
+                                    : 'bg-amber-600/20 text-amber-200 border-amber-500/30'
+                                }`}
                                 onClick={() => {
                                   const curr = loadChannels().find(
                                     (c) =>
@@ -3002,7 +3097,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/reply`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/reply`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800"
@@ -3066,7 +3163,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/forward`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/forward`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800"
@@ -3085,7 +3184,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/mark-read`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/mark-read`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800"
@@ -3106,7 +3207,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/mark-unread`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/mark-unread`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800"
@@ -3125,7 +3228,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/edit`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/edit`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800"
@@ -3147,7 +3252,9 @@ function ChatPageInner() {
                                     onClick={() => {
                                       setMsgMenuOpenId(null);
                                       router.push(
-                                        `/messages/${encodeURIComponent(m.id)}/delete`,
+                                        `/messages/${encodeURIComponent(
+                                          m.id,
+                                        )}/delete`,
                                       );
                                     }}
                                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-gray-800 text-rose-400"
@@ -3351,6 +3458,23 @@ function ChatPageInner() {
               </button>
 
               <button
+                onClick={onStartVideoCall}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-teal-600/20 text-teal-200 border border-teal-400/30 hover:bg-teal-600/25 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M23 7l-7 5 7 5V7z" />
+                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                </svg>
+                <span className="font-semibold text-xs">Video Call</span>
+              </button>
+
+              <button
                 onClick={onShareLocation}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-600/20 text-amber-200 border border-amber-400/30 hover:bg-amber-600/25 transition-colors"
               >
@@ -3545,7 +3669,11 @@ function ChatPageInner() {
                     {/* Record video (moved here, larger) */}
                     <button
                       onClick={toggleVideoRecording}
-                      className={`p-2 rounded-full hover:bg-[#242A33] ${videoRecording ? 'text-green-300' : 'text-gray-300 hover:text-white'}`}
+                      className={`p-2 rounded-full hover:bg-[#242A33] ${
+                        videoRecording
+                          ? 'text-green-300'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
                       title="Record video clip"
                     >
                       <svg
@@ -3562,7 +3690,11 @@ function ChatPageInner() {
                     {/* Record voice (moved here, larger) */}
                     <button
                       onClick={toggleAudioRecording}
-                      className={`p-2 rounded-full hover:bg-[#242A33] ${audioRecording ? 'text-green-300' : 'text-gray-300 hover:text-white'}`}
+                      className={`p-2 rounded-full hover:bg-[#242A33] ${
+                        audioRecording
+                          ? 'text-green-300'
+                          : 'text-gray-300 hover:text-white'
+                      }`}
                       title="Record voice clip"
                     >
                       <svg
@@ -3824,7 +3956,11 @@ function ChatPageInner() {
                     {coords ? (
                       <a
                         className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 text-amber-200 border border-amber-500/30 hover:bg-amber-600/25 text-xs"
-                        href={`https://www.openstreetmap.org/?mlat=${coords!.lat}&mlon=${coords!.lon}#map=16/${coords!.lat}/${coords!.lon}`}
+                        href={`https://www.openstreetmap.org/?mlat=${
+                          coords!.lat
+                        }&mlon=${coords!.lon}#map=16/${coords!.lat}/${
+                          coords!.lon
+                        }`}
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -3864,8 +4000,8 @@ function ChatPageInner() {
                       (previewType === 'image'
                         ? 'Image'
                         : previewType === 'video'
-                          ? 'Video'
-                          : 'Document')}
+                        ? 'Video'
+                        : 'Document')}
                   </div>
                   <button
                     onClick={() => setPreviewOpen(false)}
@@ -3923,8 +4059,8 @@ function ChatPageInner() {
                         {previewType === 'image'
                           ? 'Image preview not available.'
                           : previewType === 'video'
-                            ? 'Video preview not available.'
-                            : 'Document preview not available.'}
+                          ? 'Video preview not available.'
+                          : 'Document preview not available.'}
                       </div>
                     </div>
                   )}

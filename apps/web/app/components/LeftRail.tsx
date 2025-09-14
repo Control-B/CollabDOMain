@@ -98,6 +98,20 @@ function ShortcutsIcon() {
   );
 }
 
+function PhoneIcon() {
+  return (
+    <svg className={iconClasses} viewBox="0 0 24 24" fill="none">
+      <path
+        d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function MoreIcon() {
   return (
     <svg className={iconClasses} viewBox="0 0 24 24" fill="none">
@@ -166,7 +180,7 @@ function NavItem({
       )}
       title={label}
     >
-      <span className={active ? (iconActiveClass ?? iconClass) : iconClass}>
+      <span className={active ? iconActiveClass ?? iconClass : iconClass}>
         {icon}
       </span>
       <span className="mt-1 text-[10px] leading-none">{label}</span>
@@ -192,18 +206,18 @@ export default function LeftRail() {
     k === 'lunch'
       ? 'bg-amber-500'
       : k === 'away'
-        ? 'bg-yellow-400'
-        : k === 'meeting'
-          ? 'bg-sky-500'
-          : k === 'commuting'
-            ? 'bg-violet-400'
-            : k === 'outsick'
-              ? 'bg-orange-500'
-              : k === 'vacation'
-                ? 'bg-emerald-500'
-                : k === 'remote'
-                  ? 'bg-green-400'
-                  : 'bg-emerald-500';
+      ? 'bg-yellow-400'
+      : k === 'meeting'
+      ? 'bg-sky-500'
+      : k === 'commuting'
+      ? 'bg-violet-400'
+      : k === 'outsick'
+      ? 'bg-orange-500'
+      : k === 'vacation'
+      ? 'bg-emerald-500'
+      : k === 'remote'
+      ? 'bg-green-400'
+      : 'bg-emerald-500';
   // Load and watch status and notification settings in localStorage
   useEffect(() => {
     try {
@@ -305,6 +319,13 @@ export default function LeftRail() {
             iconActiveClass="text-purple-300"
           />
           <NavItem
+            href="/calls"
+            label="Calls"
+            icon={<PhoneIcon />}
+            iconClass="text-green-400 group-hover:text-green-300"
+            iconActiveClass="text-green-300"
+          />
+          <NavItem
             href="/shortcuts"
             label="Shortcuts"
             icon={<ShortcutsIcon />}
@@ -341,7 +362,9 @@ export default function LeftRail() {
             />
             {/* Online status dot */}
             <span
-              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-gray-900 ${statusDotClass(status?.key)}`}
+              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-gray-900 ${statusDotClass(
+                status?.key,
+              )}`}
             />
             {/* Hover label */}
             <div className="absolute left-16 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-2 px-3 py-1 rounded-2xl bg-gray-800 border border-gray-700 text-white shadow-lg">
@@ -373,7 +396,9 @@ export default function LeftRail() {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
                     <span
-                      className={`w-2.5 h-2.5 rounded-full ${statusDotClass(status?.key)}`}
+                      className={`w-2.5 h-2.5 rounded-full ${statusDotClass(
+                        status?.key,
+                      )}`}
                     />
                     {status?.label ?? 'Active'}
                   </div>

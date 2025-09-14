@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  livekit-server:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "50000-60000:50000-60000/udp"
+    volumes:
+      - ./livekit.yaml:/livekit.yaml
+    command: --config /livekit.yaml
+    environment:
+      - LIVEKIT_CONFIG=/livekit.yaml
+    depends_on:
+      - redis
+    networks:
+      - livekit-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - livekit-network
+
+networks:
+  livekit-network:
+    driver: bridge
+
+

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mockNotifications } from '../../route';
+import { mockNotifications } from '@/lib/mock-notifications';
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const { id } = params;

@@ -474,6 +474,16 @@ export default function HelpPage() {
               (placeholder flow).
             </li>
             <li>
+              Video Call: opens the video calling interface (
+              <Link
+                className="text-indigo-300 hover:text-indigo-200"
+                href="/calls"
+              >
+                /calls
+              </Link>
+              ) for video conferencing.
+            </li>
+            <li>
               Share Location: requests permission and shows your location via
               OpenStreetMap.
             </li>

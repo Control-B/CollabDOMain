@@ -3,6 +3,7 @@ defmodule ChatCore.UserSocket do
 
   # Channels
   channel "room:*", ChatCore.RoomChannel
+  channel "dm:*", ChatCore.DirectMessageChannel
   channel "presence:*", ChatCore.PresenceChannel
 
   # Socket params are passed from the client and can be used to verify and authenticate a user

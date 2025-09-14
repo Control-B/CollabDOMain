@@ -30,9 +30,10 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // TODO: Add EF Core DbContext (Postgres) with row-level security/tenant filters
-var connStr = builder.Configuration.GetConnectionString("AppDb")
+var connStr = builder.Configuration.GetConnectionString("Postgres")
+    ?? builder.Configuration.GetConnectionString("AppDb")
     ?? builder.Configuration["DB_CONNECTION"]
-    ?? "Host=localhost;Port=5432;Database=collabazure;Username=postgres;Password=postgres";
+    ?? "Host=postgres;Port=5432;Database=collab;Username=collab;Password=collab";
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connStr));
 // TODO: Add FluentValidation

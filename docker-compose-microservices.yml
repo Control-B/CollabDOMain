@@ -1,0 +1,198 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: collab
+      POSTGRES_USER: collab
+      POSTGRES_PASSWORD: collab
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U collab -d collab']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - '8000:8000'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/api-gateway:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - '8001:8001'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+      - SECRET_KEY=your-super-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/auth-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+
+  # Document Management Service
+  dms-service:
+    build:
+      context: ./services/dms-service
+      dockerfile: Dockerfile
+    ports:
+      - '8002:8002'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/dms-service:/app
+      - dms_uploads:/app/uploads
+    command: uvicorn main:app --host 0.0.0.0 --port 8002 --reload
+
+  # E-Signature Service
+  esign-service:
+    build:
+      context: ./services/esign-service
+      dockerfile: Dockerfile
+    ports:
+      - '8003:8003'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/esign-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8003 --reload
+
+  # Geofencing Service
+  geofence-service:
+    build:
+      context: ./services/geofence-service
+      dockerfile: Dockerfile
+    ports:
+      - '8004:8004'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/geofence-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8004 --reload
+
+  # Trip Management Service
+  trip-service:
+    build:
+      context: ./services/trip-service
+      dockerfile: Dockerfile
+    ports:
+      - '8005:8005'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/trip-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8005 --reload
+
+  # LiveKit Call Service
+  livekit-service:
+    build:
+      context: ./services/livekit-service
+      dockerfile: Dockerfile
+    ports:
+      - '8006:8006'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+      - LIVEKIT_URL=ws://livekit-server:7880
+      - LIVEKIT_API_KEY=devkey
+      - LIVEKIT_API_SECRET=secret
+    depends_on:
+      postgres:
+        condition: service_healthy
+      livekit-server:
+        condition: service_started
+    volumes:
+      - ./services/livekit-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8006 --reload
+
+  # LiveKit Server
+  livekit-server:
+    image: livekit/livekit-server:latest
+    ports:
+      - '7880:7880'
+      - '7881:7881'
+      - '50000-51000:50000-51000/udp'
+    volumes:
+      - ./livekit-server/livekit.yaml:/livekit.yaml
+    command: --config /livekit.yaml
+    environment:
+      - LIVEKIT_CONFIG=/livekit.yaml
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Chat Service (existing Elixir/Phoenix)
+  chat-service:
+    build:
+      context: ./apps/chat-core
+      dockerfile: Dockerfile
+    ports:
+      - '4000:4000'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+      - SECRET_KEY_BASE=your-secret-key-base-here-please-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Web Application (existing Next.js)
+  web-app:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:
+  redis_data:
+  dms_uploads:

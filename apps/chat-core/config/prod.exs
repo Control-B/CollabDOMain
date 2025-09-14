@@ -145,25 +145,23 @@ config :chat_core, ChatCoreWeb.Presence,
 config :logger,
   level: :info,
   backends: [
-    :console,
-    {LoggerFileBackend, :error_log},
-    {LoggerJSON, :json_log}
+    :console
   ]
 
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id, :user_id, :channel, :topic]
 
-config :logger, :error_log,
-  path: "/var/log/chat_core/error.log",
-  level: :error,
-  rotate: %{max_bytes: 10_485_760, keep: 5}  # 10MB, keep 5 files
+# config :logger, :error_log,
+#   path: "/var/log/chat_core/error.log",
+#   level: :error,
+#   rotate: %{max_bytes: 10_485_760, keep: 5}  # 10MB, keep 5 files
 
-config :logger, :json_log,
-  path: "/var/log/chat_core/app.log",
-  level: :info,
-  formatter: LoggerJSON.Formatters.GoogleCloud,
-  metadata: :all
+# config :logger, :json_log,
+#   path: "/var/log/chat_core/app.log",
+#   level: :info,
+#   formatter: LoggerJSON.Formatters.GoogleCloud,
+#   metadata: :all
 
 # Application-specific optimizations
 config :chat_core,
@@ -239,50 +237,22 @@ config :chat_core,
     ]
   ]
 
-# Telemetry and monitoring
-config :chat_core, :telemetry,
-  metrics: [
-    # Phoenix metrics
-    {ChatCoreWeb.Telemetry, [
-      summary("phoenix.endpoint.stop.duration",
-        unit: {:native, :millisecond}
-      ),
-      counter("phoenix.endpoint.stop.count"),
-      
-      # Channel metrics
-      summary("phoenix.channel_joined.duration",
-        unit: {:native, :millisecond}
-      ),
-      counter("phoenix.channel_joined.count"),
-      
-      # Database metrics
-      summary("chat_core.repo.query.total_time",
-        unit: {:native, :millisecond}
-      ),
-      counter("chat_core.repo.query.count")
-    ]}
-  ],
-  
-  # Prometheus integration
-  prometheus: [
-    port: 9090,
-    path: "/metrics"
-  ]
+# Telemetry and monitoring - disabled for now
 
-# Clustering with libcluster
-config :libcluster,
-  topologies: [
-    k8s: [
-      strategy: Cluster.Strategy.Kubernetes,
-      config: [
-        mode: :dns,
-        kubernetes_node_basename: "chat-core",
-        kubernetes_selector: "app=chat-core",
-        kubernetes_namespace: System.get_env("K8S_NAMESPACE", "default"),
-        polling_interval: 10_000
-      ]
-    ]
-  ]
+# Clustering with libcluster - disabled for now
+# config :libcluster,
+#   topologies: [
+#     k8s: [
+#       strategy: Cluster.Strategy.Kubernetes,
+#       config: [
+#         mode: :dns,
+#         kubernetes_node_basename: "chat-core",
+#         kubernetes_selector: "app=chat-core",
+#         kubernetes_namespace: System.get_env("K8S_NAMESPACE", "default"),
+#         polling_interval: 10_000
+#       ]
+#     ]
+#   ]
 
 # Runtime configuration
 config :chat_core, :runtime,
