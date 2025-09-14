@@ -10,6 +10,10 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      id-token: write
+      actions: write
+      checks: write
+      statuses: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,3 +27,4 @@ jobs:
       - run: npm run release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
