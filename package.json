@@ -1,24 +1,31 @@
 {
   "name": "collab-azure",
+  "version": "1.0.0",
   "private": true,
-  "version": "0.1.0",
-  "workspaces": [
-    "apps/web",
-    "apps/mobile",
-    "apps/chat-core",
-    "apps/dms-core",
-    "packages/*"
-  ],
-  "packageManager": "pnpm@9.6.0",
+  "description": "CollabAzure monorepo with web, chat-core, and dms-core services",
   "scripts": {
-    "dev": "turbo run dev",
-    "build": "turbo run build",
-    "test": "turbo run test",
-    "lint": "turbo run lint",
-    "format": "prettier -w ."
+    "release": "semantic-release",
+    "release:dry-run": "semantic-release --dry-run"
   },
   "devDependencies": {
-    "prettier": "^3.3.2",
-    "turbo": "^2.0.6"
-  }
+    "semantic-release": "^24.2.8",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "@semantic-release/commit-analyzer": "^11.1.0",
+    "@semantic-release/release-notes-generator": "^12.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Control-B/CollabAzure.git"
+  },
+  "keywords": [
+    "collaboration",
+    "azure",
+    "microservices",
+    "chat",
+    "dms"
+  ],
+  "author": "Control-B",
+  "license": "MIT"
 }
