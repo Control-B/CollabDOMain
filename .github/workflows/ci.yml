@@ -9,39 +9,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
-      
+
       - name: .NET build
         run: |
           dotnet build apps/dms-core/dms-core.csproj -c Release
-      
+
       - name: Set up Elixir
         uses: erlef/setup-beam@v1
         with:
           elixir-version: '1.16.0'
           otp-version: '26.0'
-      
+
       - name: Build Elixir app
         run: |
           cd apps/chat-core
           mix deps.get
           mix compile
         continue-on-error: true
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-      
+
       - name: Install root dependencies
         run: |
           npm ci --prefer-offline --no-audit || npm install --no-audit
-      
+
       - name: Test web app dependencies
         run: |
           cd apps/web
