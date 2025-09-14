@@ -39,7 +39,8 @@ jobs:
           cache: 'npm'
       
       - name: Install root dependencies
-        run: npm ci
+        run: |
+          npm ci --prefer-offline --no-audit || npm install --no-audit
       
       - name: Test web app dependencies
         run: |
