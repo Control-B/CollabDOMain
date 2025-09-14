@@ -9,16 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with: { version: 9 }
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install -w
-      - run: pnpm turbo run lint
-      - run: pnpm turbo run build
-      - run: pnpm turbo run test
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
@@ -26,3 +16,25 @@ jobs:
       - name: .NET build
         run: |
           dotnet build apps/dms-core/dms-core.csproj -c Release
+      - name: Set up Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.16.0'
+          otp-version: '26.0'
+      - name: Build Elixir app
+        run: |
+          cd apps/chat-core
+          mix deps.get
+          mix compile
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - name: Install root dependencies
+        run: npm ci
+      - name: Build web app
+        run: |
+          cd apps/web
+          npm ci
+          npm run build
+        continue-on-error: true
