@@ -1,60 +1,69 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { Truck, Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react'
+import Link from 'next/link';
+import {
+  Truck,
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Instagram,
+} from 'lucide-react';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   const footerSections = [
     {
-      title: "Product",
+      title: 'Product',
       links: [
-        { name: "Features", href: "#features" },
-        { name: "Solutions", href: "#solutions" },
-        { name: "Pricing", href: "#pricing" },
-        { name: "API Documentation", href: "#" },
-        { name: "Integrations", href: "#" }
-      ]
+        { name: 'Features', href: '#features' },
+        { name: 'Solutions', href: '#solutions' },
+        { name: 'Pricing', href: '#pricing' },
+        { name: 'API Documentation', href: '#' },
+        { name: 'Integrations', href: '#' },
+      ],
     },
     {
-      title: "Company",
+      title: 'Company',
       links: [
-        { name: "About Us", href: "#about" },
-        { name: "Careers", href: "#" },
-        { name: "Press", href: "#" },
-        { name: "Blog", href: "#" },
-        { name: "Partners", href: "#" }
-      ]
+        { name: 'About Us', href: '#about' },
+        { name: 'Careers', href: '#' },
+        { name: 'Press', href: '#' },
+        { name: 'Blog', href: '#' },
+        { name: 'Partners', href: '#' },
+      ],
     },
     {
-      title: "Resources",
+      title: 'Resources',
       links: [
-        { name: "Help Center", href: "#" },
-        { name: "Documentation", href: "#" },
-        { name: "Case Studies", href: "#" },
-        { name: "Webinars", href: "#" },
-        { name: "Community", href: "#" }
-      ]
+        { name: 'Help Center', href: '#' },
+        { name: 'Documentation', href: '#' },
+        { name: 'Case Studies', href: '#' },
+        { name: 'Webinars', href: '#' },
+        { name: 'Community', href: '#' },
+      ],
     },
     {
-      title: "Support",
+      title: 'Support',
       links: [
-        { name: "Contact Us", href: "#contact" },
-        { name: "Status Page", href: "#" },
-        { name: "Security", href: "#" },
-        { name: "Privacy Policy", href: "#" },
-        { name: "Terms of Service", href: "#" }
-      ]
-    }
-  ]
+        { name: 'Contact Us', href: '#contact' },
+        { name: 'Status Page', href: '#' },
+        { name: 'Security', href: '#' },
+        { name: 'Privacy Policy', href: '#' },
+        { name: 'Terms of Service', href: '#' },
+      ],
+    },
+  ];
 
   const socialLinks = [
-    { icon: Facebook, href: "#", label: "Facebook" },
-    { icon: Twitter, href: "#", label: "Twitter" },
-    { icon: Linkedin, href: "#", label: "LinkedIn" },
-    { icon: Instagram, href: "#", label: "Instagram" }
-  ]
+    { icon: Facebook, href: '#', label: 'Facebook' },
+    { icon: Twitter, href: '#', label: 'Twitter' },
+    { icon: Linkedin, href: '#', label: 'LinkedIn' },
+    { icon: Instagram, href: '#', label: 'Instagram' },
+  ];
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -69,11 +78,11 @@ export default function Footer() {
               </div>
               <span className="text-xl font-bold">Dispatch</span>
             </Link>
-            
+
             <p className="text-gray-400 mb-6 leading-relaxed">
-              Revolutionizing trucking and logistics operations with innovative technology. 
-              Streamline your fleet management, eliminate paperwork, and connect your team 
-              like never before.
+              Revolutionizing trucking and logistics operations with innovative
+              technology. Streamline your fleet management, eliminate paperwork,
+              and connect your team like never before.
             </p>
 
             {/* Contact Info */}
@@ -118,7 +127,8 @@ export default function Footer() {
           <div className="max-w-2xl">
             <h3 className="text-xl font-semibold mb-2">Stay Updated</h3>
             <p className="text-gray-400 mb-6">
-              Get the latest updates on new features, industry insights, and best practices.
+              Get the latest updates on new features, industry insights, and
+              best practices.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
@@ -141,7 +151,7 @@ export default function Footer() {
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
               © {currentYear} Dispatch. All rights reserved.
             </div>
-            
+
             {/* Social Links */}
             <div className="flex space-x-4 mb-4 md:mb-0">
               {socialLinks.map((social, index) => (
@@ -158,13 +168,22 @@ export default function Footer() {
 
             {/* Legal Links */}
             <div className="flex space-x-6 text-sm">
-              <Link href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <Link
+                href="#"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
                 Privacy Policy
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <Link
+                href="#"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
                 Terms of Service
               </Link>
-              <Link href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
+              <Link
+                href="#"
+                className="text-gray-400 hover:text-white transition-colors duration-200"
+              >
                 Cookie Policy
               </Link>
             </div>
@@ -172,5 +191,5 @@ export default function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

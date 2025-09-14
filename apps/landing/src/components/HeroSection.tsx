@@ -1,25 +1,25 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { ArrowRight, Play, Truck, MapPin, FileText, Users } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowRight, Play, Truck, MapPin, FileText, Users } from 'lucide-react';
 
 export default function HeroSection() {
-  const [currentText, setCurrentText] = useState(0)
-  
+  const [currentText, setCurrentText] = useState(0);
+
   const heroTexts = [
-    "Streamline Operations",
-    "Eliminate Paperwork",
-    "Connect Your Team",
-    "Track Everything"
-  ]
+    'Streamline Operations',
+    'Eliminate Paperwork',
+    'Connect Your Team',
+    'Track Everything',
+  ];
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentText((prev) => (prev + 1) % heroTexts.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [])
+      setCurrentText((prev) => (prev + 1) % heroTexts.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -42,18 +42,17 @@ export default function HeroSection() {
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
             The Future of
             <br />
-            <span className="gradient-text">
-              {heroTexts[currentText]}
-            </span>
+            <span className="gradient-text">{heroTexts[currentText]}</span>
             <br />
             is Here
           </h1>
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Revolutionize your trucking and logistics operations with Dispatch. 
-            Say goodbye to endless paperwork, long check-in queues, and communication gaps. 
-            Welcome to seamless collaboration, instant document sharing, and real-time tracking.
+            Revolutionize your trucking and logistics operations with Dispatch.
+            Say goodbye to endless paperwork, long check-in queues, and
+            communication gaps. Welcome to seamless collaboration, instant
+            document sharing, and real-time tracking.
           </p>
 
           {/* CTA Buttons */}
@@ -112,5 +111,5 @@ export default function HeroSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

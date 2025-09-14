@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react'
+import { useState } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 
 export default function ContactSection() {
   const [formData, setFormData] = useState({
@@ -9,50 +9,52 @@ export default function ContactSection() {
     email: '',
     company: '',
     phone: '',
-    message: ''
-  })
-  const [isSubmitted, setIsSubmitted] = useState(false)
+    message: '',
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle form submission here
-    setIsSubmitted(true)
-    setTimeout(() => setIsSubmitted(false), 3000)
-  }
+    setIsSubmitted(true);
+    setTimeout(() => setIsSubmitted(false), 3000);
+  };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const contactInfo = [
     {
       icon: Mail,
-      title: "Email Us",
-      details: "hello@dispatch.com",
-      description: "We'll respond within 24 hours"
+      title: 'Email Us',
+      details: 'hello@dispatch.com',
+      description: "We'll respond within 24 hours",
     },
     {
       icon: Phone,
-      title: "Call Us",
-      details: "+1 (555) 123-4567",
-      description: "Mon-Fri 8AM-6PM EST"
+      title: 'Call Us',
+      details: '+1 (555) 123-4567',
+      description: 'Mon-Fri 8AM-6PM EST',
     },
     {
       icon: MapPin,
-      title: "Visit Us",
-      details: "123 Logistics Ave",
-      description: "Austin, TX 78701"
+      title: 'Visit Us',
+      details: '123 Logistics Ave',
+      description: 'Austin, TX 78701',
     },
     {
       icon: Clock,
-      title: "Support Hours",
-      details: "24/7 Available",
-      description: "Emergency support always on"
-    }
-  ]
+      title: 'Support Hours',
+      details: '24/7 Available',
+      description: 'Emergency support always on',
+    },
+  ];
 
   return (
     <section id="contact" className="py-20 bg-white">
@@ -63,27 +65,37 @@ export default function ContactSection() {
             <span className="gradient-text"> Started?</span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Have questions about Dispatch? Want to see how it can transform your operations? 
-            Get in touch with our team of trucking technology experts.
+            Have questions about Dispatch? Want to see how it can transform your
+            operations? Get in touch with our team of trucking technology
+            experts.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Send us a Message</h3>
-            
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">
+              Send us a Message
+            </h3>
+
             {isSubmitted ? (
               <div className="text-center py-8">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold text-gray-900 mb-2">Message Sent!</h4>
-                <p className="text-gray-600">We'll get back to you within 24 hours.</p>
+                <h4 className="text-xl font-semibold text-gray-900 mb-2">
+                  Message Sent!
+                </h4>
+                <p className="text-gray-600">
+                  We'll get back to you within 24 hours.
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Full Name *
                     </label>
                     <input
@@ -98,7 +110,10 @@ export default function ContactSection() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Email Address *
                     </label>
                     <input
@@ -116,7 +131,10 @@ export default function ContactSection() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="company"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Company Name
                     </label>
                     <input
@@ -130,7 +148,10 @@ export default function ContactSection() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Phone Number
                     </label>
                     <input
@@ -146,7 +167,10 @@ export default function ContactSection() {
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Message *
                   </label>
                   <textarea
@@ -175,11 +199,14 @@ export default function ContactSection() {
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Get in Touch</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                Get in Touch
+              </h3>
               <p className="text-gray-600 mb-8 leading-relaxed">
-                Our team of trucking technology experts is here to help you transform your operations. 
-                Whether you have questions about features, need a custom demo, or want to discuss 
-                enterprise solutions, we're ready to assist.
+                Our team of trucking technology experts is here to help you
+                transform your operations. Whether you have questions about
+                features, need a custom demo, or want to discuss enterprise
+                solutions, we're ready to assist.
               </p>
             </div>
 
@@ -190,7 +217,9 @@ export default function ContactSection() {
                     <info.icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-900">{info.title}</h4>
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {info.title}
+                    </h4>
                     <p className="text-gray-900 font-medium">{info.details}</p>
                     <p className="text-gray-600 text-sm">{info.description}</p>
                   </div>
@@ -200,19 +229,33 @@ export default function ContactSection() {
 
             {/* Quick Actions */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h4>
+              <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                Quick Actions
+              </h4>
               <div className="space-y-3">
                 <button className="w-full text-left p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">Schedule a Demo</div>
-                  <div className="text-sm text-gray-600">See Dispatch in action</div>
+                  <div className="font-medium text-gray-900">
+                    Schedule a Demo
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    See Dispatch in action
+                  </div>
                 </button>
                 <button className="w-full text-left p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">Download Brochure</div>
-                  <div className="text-sm text-gray-600">Get detailed information</div>
+                  <div className="font-medium text-gray-900">
+                    Download Brochure
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Get detailed information
+                  </div>
                 </button>
                 <button className="w-full text-left p-3 bg-white rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">Start Free Trial</div>
-                  <div className="text-sm text-gray-600">No credit card required</div>
+                  <div className="font-medium text-gray-900">
+                    Start Free Trial
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    No credit card required
+                  </div>
                 </button>
               </div>
             </div>
@@ -220,5 +263,5 @@ export default function ContactSection() {
         </div>
       </div>
     </section>
-  )
+  );
 }

@@ -8,6 +8,7 @@ A modern, responsive landing page for Dispatch - a trucking and logistics collab
 - **Responsive**: Fully responsive design that works on all devices
 - **Story-Driven Content**: Compelling narrative about the need for the platform and how it solves problems
 - **Six Main Sections**:
+
   1. Hero Section - Compelling introduction with animated text
   2. Features Section - Core platform features with benefits
   3. Solutions Section - Industry-specific solutions with stats
@@ -16,6 +17,7 @@ A modern, responsive landing page for Dispatch - a trucking and logistics collab
   6. Contact Section - Contact form and information
 
 - **Authentication Pages**:
+
   - Sign In page with email/password and social login options
   - Sign Up page with comprehensive form and social providers
   - Support for Microsoft, Google, and Apple authentication
@@ -34,11 +36,13 @@ A modern, responsive landing page for Dispatch - a trucking and logistics collab
 ## Getting Started
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Run the development server:
+
    ```bash
    npm run dev
    ```

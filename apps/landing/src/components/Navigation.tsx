@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { Menu, X, Truck, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Menu, X, Truck, ChevronDown } from 'lucide-react';
 
 export default function Navigation() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isScrolled, setIsScrolled] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const navItems = [
     { name: 'Features', href: '#features' },
@@ -22,14 +22,16 @@ export default function Navigation() {
     { name: 'Pricing', href: '#pricing' },
     { name: 'About', href: '#about' },
     { name: 'Contact', href: '#contact' },
-  ]
+  ];
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200' 
-        : 'bg-transparent'
-    }`}>
+    <nav
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200'
+          : 'bg-transparent'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -75,7 +77,11 @@ export default function Navigation() {
               onClick={() => setIsOpen(!isOpen)}
               className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
             >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {isOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
@@ -115,5 +121,5 @@ export default function Navigation() {
         )}
       </div>
     </nav>
-  )
+  );
 }

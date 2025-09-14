@@ -3,14 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.8",
     "@next-auth/prisma-adapter": "^1.0.7",
+    "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.544.0",

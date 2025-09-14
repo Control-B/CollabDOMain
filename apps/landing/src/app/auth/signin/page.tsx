@@ -1,35 +1,36 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, ArrowLeft, Truck } from 'lucide-react'
+import { useState } from 'react';
+import Link from 'next/link';
+import { Eye, EyeOff, Mail, Lock, ArrowLeft, Truck } from 'lucide-react';
 
 export default function SignInPage() {
-  const [showPassword, setShowPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false
-  })
+    rememberMe: false,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle sign in logic here
-    console.log('Sign in:', formData)
-  }
+    console.log('Sign in:', formData);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    })
-  }
+      [e.target.name]:
+        e.target.type === 'checkbox' ? e.target.checked : e.target.value,
+    });
+  };
 
   const socialProviders = [
     { name: 'Microsoft', color: 'bg-blue-600 hover:bg-blue-700', icon: 'M' },
     { name: 'Google', color: 'bg-red-600 hover:bg-red-700', icon: 'G' },
-    { name: 'Apple', color: 'bg-gray-800 hover:bg-gray-900', icon: 'A' }
-  ]
+    { name: 'Apple', color: 'bg-gray-800 hover:bg-gray-900', icon: 'A' },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -48,13 +49,11 @@ export default function SignInPage() {
             </div>
             <span className="text-2xl font-bold gradient-text">Dispatch</span>
           </Link>
-          
+
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome Back
           </h2>
-          <p className="text-gray-600">
-            Sign in to your Dispatch account
-          </p>
+          <p className="text-gray-600">Sign in to your Dispatch account</p>
         </div>
 
         {/* Sign In Form */}
@@ -62,7 +61,10 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -84,7 +86,10 @@ export default function SignInPage() {
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">
@@ -126,7 +131,10 @@ export default function SignInPage() {
                   onChange={handleChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
-                <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="rememberMe"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   Remember me
                 </label>
               </div>
@@ -154,7 +162,9 @@ export default function SignInPage() {
                 <div className="w-full border-t border-gray-300" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
               </div>
             </div>
           </div>
@@ -197,5 +207,5 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

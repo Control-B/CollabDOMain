@@ -1,12 +1,22 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Eye, EyeOff, Mail, Lock, User, Building, ArrowLeft, Truck, Check } from 'lucide-react'
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Building,
+  ArrowLeft,
+  Truck,
+  Check,
+} from 'lucide-react';
 
 export default function SignUpPage() {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,34 +26,35 @@ export default function SignUpPage() {
     password: '',
     confirmPassword: '',
     agreeToTerms: false,
-    subscribeNewsletter: false
-  })
+    subscribeNewsletter: false,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     // Handle sign up logic here
-    console.log('Sign up:', formData)
-  }
+    console.log('Sign up:', formData);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.type === 'checkbox' ? e.target.checked : e.target.value
-    })
-  }
+      [e.target.name]:
+        e.target.type === 'checkbox' ? e.target.checked : e.target.value,
+    });
+  };
 
   const socialProviders = [
     { name: 'Microsoft', color: 'bg-blue-600 hover:bg-blue-700', icon: 'M' },
     { name: 'Google', color: 'bg-red-600 hover:bg-red-700', icon: 'G' },
-    { name: 'Apple', color: 'bg-gray-800 hover:bg-gray-900', icon: 'A' }
-  ]
+    { name: 'Apple', color: 'bg-gray-800 hover:bg-gray-900', icon: 'A' },
+  ];
 
   const benefits = [
-    "14-day free trial",
-    "No credit card required",
-    "Setup in under 5 minutes",
-    "24/7 customer support"
-  ]
+    '14-day free trial',
+    'No credit card required',
+    'Setup in under 5 minutes',
+    '24/7 customer support',
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -58,19 +69,25 @@ export default function SignUpPage() {
           {/* Left Side - Benefits */}
           <div className="hidden lg:flex flex-col justify-center space-y-8">
             <div>
-              <Link href="/" className="inline-flex items-center space-x-2 mb-6">
+              <Link
+                href="/"
+                className="inline-flex items-center space-x-2 mb-6"
+              >
                 <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <Truck className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold gradient-text">Dispatch</span>
+                <span className="text-2xl font-bold gradient-text">
+                  Dispatch
+                </span>
               </Link>
-              
+
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
                 Join Thousands of Trucking Companies
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Transform your operations with Dispatch. Streamline your fleet management, 
-                eliminate paperwork, and connect your team like never before.
+                Transform your operations with Dispatch. Streamline your fleet
+                management, eliminate paperwork, and connect your team like
+                never before.
               </p>
             </div>
 
@@ -86,9 +103,12 @@ export default function SignUpPage() {
             </div>
 
             <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
-              <h3 className="text-lg font-semibold mb-2">Ready to get started?</h3>
+              <h3 className="text-lg font-semibold mb-2">
+                Ready to get started?
+              </h3>
               <p className="text-blue-100">
-                Join over 10,000 trucking companies that trust Dispatch to manage their operations.
+                Join over 10,000 trucking companies that trust Dispatch to
+                manage their operations.
               </p>
             </div>
           </div>
@@ -96,34 +116,38 @@ export default function SignUpPage() {
           {/* Right Side - Sign Up Form */}
           <div className="bg-white rounded-2xl shadow-xl p-8">
             <div className="lg:hidden text-center mb-6">
-              <Link href="/" className="inline-flex items-center space-x-2 mb-4">
+              <Link
+                href="/"
+                className="inline-flex items-center space-x-2 mb-4"
+              >
                 <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                   <Truck className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xl font-bold gradient-text">Dispatch</span>
+                <span className="text-xl font-bold gradient-text">
+                  Dispatch
+                </span>
               </Link>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Create Your Account
               </h2>
-              <p className="text-gray-600">
-                Start your free trial today
-              </p>
+              <p className="text-gray-600">Start your free trial today</p>
             </div>
 
             <div className="hidden lg:block mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Create Your Account
               </h2>
-              <p className="text-gray-600">
-                Start your free trial today
-              </p>
+              <p className="text-gray-600">Start your free trial today</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Name Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     First Name
                   </label>
                   <div className="relative">
@@ -143,7 +167,10 @@ export default function SignUpPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Last Name
                   </label>
                   <input
@@ -161,7 +188,10 @@ export default function SignUpPage() {
 
               {/* Email Field */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email Address
                 </label>
                 <div className="relative">
@@ -184,7 +214,10 @@ export default function SignUpPage() {
               {/* Company and Phone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="company"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Company Name
                   </label>
                   <div className="relative">
@@ -203,7 +236,10 @@ export default function SignUpPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Phone Number
                   </label>
                   <input
@@ -221,7 +257,10 @@ export default function SignUpPage() {
               {/* Password Fields */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Password
                   </label>
                   <div className="relative">
@@ -252,7 +291,10 @@ export default function SignUpPage() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Confirm Password
                   </label>
                   <div className="relative">
@@ -269,7 +311,9 @@ export default function SignUpPage() {
                     <button
                       type="button"
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
                     >
                       {showConfirmPassword ? (
                         <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -293,13 +337,22 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
                   />
-                  <label htmlFor="agreeToTerms" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="agreeToTerms"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     I agree to the{' '}
-                    <Link href="#" className="text-blue-600 hover:text-blue-500">
+                    <Link
+                      href="#"
+                      className="text-blue-600 hover:text-blue-500"
+                    >
                       Terms of Service
                     </Link>{' '}
                     and{' '}
-                    <Link href="#" className="text-blue-600 hover:text-blue-500">
+                    <Link
+                      href="#"
+                      className="text-blue-600 hover:text-blue-500"
+                    >
                       Privacy Policy
                     </Link>
                   </label>
@@ -313,7 +366,10 @@ export default function SignUpPage() {
                     onChange={handleChange}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
                   />
-                  <label htmlFor="subscribeNewsletter" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="subscribeNewsletter"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Subscribe to our newsletter for updates and tips
                   </label>
                 </div>
@@ -335,7 +391,9 @@ export default function SignUpPage() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
             </div>
@@ -379,5 +437,5 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
