@@ -62,18 +62,14 @@ export default function SolutionsSection() {
   ];
 
   return (
-    <section
-      id="solutions"
-      className="py-20 bg-gradient-to-br from-gray-50 to-blue-50"
-    >
+    <section id="solutions" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Solutions for Every
-            <span className="gradient-text"> Challenge</span>
+          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+            Solutions for Every Challenge
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Whether you're managing a small fleet or a large logistics
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+            Whether you&#39;re managing a small fleet or a large logistics
             operation, Dispatch provides tailored solutions to address your
             specific needs and challenges.
           </p>
@@ -83,7 +79,7 @@ export default function SolutionsSection() {
           {solutions.map((solution, index) => (
             <div
               key={index}
-              className="group relative overflow-hidden rounded-2xl bg-white shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
+              className="group relative overflow-hidden rounded-2xl surface-card hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2"
             >
               <div
                 className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${solution.color}`}
@@ -96,11 +92,11 @@ export default function SolutionsSection() {
                   <solution.icon className="w-8 h-8 text-white" />
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <h3 className="text-xl font-semibold text-gray-100 mb-3">
                   {solution.title}
                 </h3>
 
-                <p className="text-gray-600 mb-4 leading-relaxed">
+                <p className="text-gray-400 mb-4 leading-relaxed">
                   {solution.description}
                 </p>
 
@@ -116,11 +112,11 @@ export default function SolutionsSection() {
 
         {/* Call to Action */}
         <div className="text-center mt-16">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="surface-card rounded-2xl p-8 max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-100 mb-4">
               Ready to Transform Your Operations?
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-400 mb-6">
               Join thousands of trucking companies that have already
               revolutionized their operations with Dispatch.
             </p>
@@ -128,7 +124,7 @@ export default function SolutionsSection() {
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold">
                 Schedule Demo
               </button>
-              <button className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:border-blue-500 hover:text-blue-600 transition-all duration-200 font-semibold">
+              <button className="border-2 border-gray-700 text-gray-200 px-8 py-3 rounded-lg hover:border-blue-500 hover:text-blue-400 transition-all duration-200 font-semibold">
                 View Case Studies
               </button>
             </div>

@@ -59,14 +59,13 @@ export default function PricingSection() {
   ];
 
   return (
-    <section id="pricing" className="py-20 bg-white">
+    <section id="pricing" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Simple, Transparent
-            <span className="gradient-text"> Pricing</span>
+          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+            Simple, Transparent Pricing
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Choose the plan that fits your fleet size and needs. All plans
             include our core features with no hidden fees or setup costs.
           </p>
@@ -76,11 +75,11 @@ export default function PricingSection() {
           {plans.map((plan, index) => (
             <div
               key={index}
-              className={`relative rounded-2xl p-8 ${
+              className={`relative rounded-2xl p-8 transition-all duration-300 ${
                 plan.popular
-                  ? 'bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-300 shadow-2xl transform scale-105'
-                  : 'bg-white border border-gray-200 shadow-lg hover:shadow-xl'
-              } transition-all duration-300`}
+                  ? 'surface-card border-2 border-blue-400/60 shadow-2xl transform scale-105'
+                  : 'surface-card hover:shadow-xl'
+              }`}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -92,23 +91,23 @@ export default function PricingSection() {
               )}
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                <h3 className="text-2xl font-bold text-gray-100 mb-2">
                   {plan.name}
                 </h3>
-                <p className="text-gray-600 mb-4">{plan.description}</p>
+                <p className="text-gray-400 mb-4">{plan.description}</p>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold text-gray-900">
+                  <span className="text-4xl font-bold text-gray-100">
                     {plan.price}
                   </span>
-                  <span className="text-gray-600 ml-2">{plan.period}</span>
+                  <span className="text-gray-400 ml-2">{plan.period}</span>
                 </div>
               </div>
 
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature, featureIndex) => (
                   <li key={featureIndex} className="flex items-start">
-                    <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700">{feature}</span>
+                    <Check className="w-5 h-5 text-emerald-400 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-300">{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -117,7 +116,7 @@ export default function PricingSection() {
                 className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 ${
                   plan.popular
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
+                    : 'bg-gray-800/60 text-gray-100 hover:bg-gray-700/60 border border-gray-700'
                 }`}
               >
                 {plan.name === 'Enterprise'
@@ -130,14 +129,14 @@ export default function PricingSection() {
 
         {/* Additional Info */}
         <div className="text-center mt-16">
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 max-w-4xl mx-auto">
+          <div className="surface-card rounded-2xl p-8 max-w-4xl mx-auto">
             <div className="flex items-center justify-center mb-4">
-              <Zap className="w-8 h-8 text-yellow-500 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-900">
+              <Zap className="w-8 h-8 text-yellow-400 mr-3" />
+              <h3 className="text-2xl font-bold text-gray-100">
                 14-Day Free Trial
               </h3>
             </div>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-400 mb-6">
               Try Dispatch risk-free for 14 days. No credit card required.
               Cancel anytime with no questions asked.
             </p>
@@ -145,7 +144,7 @@ export default function PricingSection() {
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold">
                 Start Free Trial
               </button>
-              <button className="border-2 border-gray-300 text-gray-700 px-8 py-3 rounded-lg hover:border-blue-500 hover:text-blue-600 transition-all duration-200 font-semibold">
+              <button className="border-2 border-gray-700 text-gray-200 px-8 py-3 rounded-lg hover:border-blue-500 hover:text-blue-400 transition-all duration-200 font-semibold">
                 Talk to Sales
               </button>
             </div>

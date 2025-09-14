@@ -34,18 +34,14 @@ export default function AboutSection() {
   ];
 
   return (
-    <section
-      id="about"
-      className="py-20 bg-gradient-to-br from-gray-50 to-blue-50"
-    >
+    <section id="about" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Story Section */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Our Story: Born from
-            <span className="gradient-text"> Real Experience</span>
+          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+            Our Story: Born from Real Experience
           </h2>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-400 max-w-4xl mx-auto leading-relaxed">
             Dispatch was founded by trucking industry veterans who experienced
             firsthand the pain points of traditional fleet management. After
             years of dealing with paperwork, communication gaps, and inefficient
@@ -56,15 +52,15 @@ export default function AboutSection() {
 
         {/* Problem & Solution */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
+          <div className="surface-card rounded-2xl p-8">
             <h3 className="text-2xl font-bold text-red-600 mb-4">
               The Problem
             </h3>
             <div className="space-y-4">
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Traditional trucking operations are bogged down by:
               </p>
-              <ul className="space-y-2 text-gray-600">
+              <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">
                   <div className="w-2 h-2 bg-red-500 rounded-full mr-3 mt-2"></div>
                   Endless paperwork and manual processes
@@ -89,15 +85,15 @@ export default function AboutSection() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-8 shadow-lg">
+          <div className="surface-card rounded-2xl p-8">
             <h3 className="text-2xl font-bold text-green-600 mb-4">
               Our Solution
             </h3>
             <div className="space-y-4">
-              <p className="text-gray-700">
+              <p className="text-gray-300">
                 Dispatch transforms your operations with:
               </p>
-              <ul className="space-y-2 text-gray-600">
+              <ul className="space-y-2 text-gray-400">
                 <li className="flex items-start">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-3 mt-2"></div>
                   Automated geofence check-ins
@@ -130,20 +126,20 @@ export default function AboutSection() {
               <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <stat.icon className="w-8 h-8 text-white" />
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">
+              <div className="text-3xl font-bold text-gray-100 mb-2">
                 {stat.number}
               </div>
-              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-gray-400">{stat.label}</div>
             </div>
           ))}
         </div>
 
         {/* Values */}
         <div className="text-center mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <h3 className="text-2xl font-bold text-gray-100 mb-4">
             Our Core Values
           </h3>
-          <p className="text-gray-600 max-w-3xl mx-auto">
+          <p className="text-gray-400 max-w-3xl mx-auto">
             These principles guide everything we do and every decision we make.
           </p>
         </div>
@@ -152,12 +148,12 @@ export default function AboutSection() {
           {values.map((value, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="surface-card rounded-xl p-6 hover:shadow-2xl transition-shadow duration-300"
             >
-              <h4 className="text-xl font-semibold text-gray-900 mb-3">
+              <h4 className="text-xl font-semibold text-gray-100 mb-3">
                 {value.title}
               </h4>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-400 leading-relaxed">
                 {value.description}
               </p>
             </div>

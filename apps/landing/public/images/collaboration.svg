@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <style>
+    @keyframes dash {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes ping {
+      0% { r: 0; opacity: .7 }
+      100% { r: 26; opacity: 0 }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      [style*="animation"], animate { animation: none !important; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#ec4899"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#0b1220"/>
+  <rect x="100" y="120" width="1000" height="560" rx="24" fill="#0f172a" stroke="#1f2a44"/>
+  <circle cx="320" cy="280" r="70" fill="url(#g)" opacity="0.3"/>
+  <circle cx="880" cy="280" r="70" fill="url(#g)" opacity="0.3"/>
+  <circle cx="600" cy="520" r="70" fill="url(#g)" opacity="0.3"/>
+  <line x1="320" y1="280" x2="880" y2="280" stroke="#6b7280" stroke-width="8" stroke-dasharray="320" stroke-dashoffset="320" style="animation:dash 1.2s ease forwards"/>
+  <line x1="320" y1="280" x2="600" y2="520" stroke="#6b7280" stroke-width="8" stroke-dasharray="280" stroke-dashoffset="280" style="animation:dash 1.4s ease 150ms forwards"/>
+  <line x1="880" y1="280" x2="600" y2="520" stroke="#6b7280" stroke-width="8" stroke-dasharray="280" stroke-dashoffset="280" style="animation:dash 1.4s ease 300ms forwards"/>
+  <circle cx="320" cy="280" r="6" fill="#a78bfa"><animate attributeName="r" values="6;8;6" dur="1.2s" repeatCount="indefinite"/></circle>
+  <circle cx="880" cy="280" r="6" fill="#ec4899"><animate attributeName="r" values="6;8;6" dur="1.2s" begin="150ms" repeatCount="indefinite"/></circle>
+  <circle cx="600" cy="520" r="6" fill="#22c55e"><animate attributeName="r" values="6;8;6" dur="1.2s" begin="300ms" repeatCount="indefinite"/></circle>
+  <circle cx="320" cy="280" r="12" fill="none" stroke="#a78bfa" stroke-width="2">
+    <animate attributeName="r" from="0" to="24" dur="1.2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values=".7;0" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <rect x="260" y="190" width="120" height="30" rx="6" fill="#132033"/>
+  <rect x="820" y="190" width="120" height="30" rx="6" fill="#132033"/>
+  <rect x="540" y="430" width="120" height="30" rx="6" fill="#132033"/>
+  <!-- mini huddle indicator -->
+  <g transform="translate(1040,160)">
+    <rect x="-60" y="-22" width="120" height="44" rx="10" fill="#0f1a2c" stroke="#1f2a44"/>
+    <circle cx="-36" cy="0" r="8" fill="#22c55e"/>
+    <rect x="-16" y="-10" width="50" height="20" rx="6" fill="#132033"/>
+  </g>
+</svg>

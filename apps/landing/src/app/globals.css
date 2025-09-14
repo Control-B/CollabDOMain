@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
 /* Custom gradient text utility */
 .gradient-text {
@@ -37,9 +35,79 @@ html {
   animation: fadeInUp 0.6s ease-out;
 }
 
+/* Simple fade-in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.animate-fade-out {
+  animation: fadeOut 0.45s ease-in forwards;
+}
+
+/* Zoom + fade combo for hero media */
+@keyframes zoomInFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-zoom-in-fade {
+  animation: zoomInFade 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Subtle shimmer overlay */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-60%);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.25;
+  }
+  100% {
+    transform: translateX(160%);
+    opacity: 0;
+  }
+}
+.animate-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.12),
+    transparent
+  );
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+
 /* Glass morphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
@@ -66,4 +134,370 @@ html {
   background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   transform: translateY(-1px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Reusable gradient surfaces */
+.surface-dark {
+  background: linear-gradient(
+    180deg,
+    rgba(31, 41, 55, 0.7) 0%,
+    rgba(17, 24, 39, 0.8) 100%
+  );
+  border: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.surface-card {
+  background: radial-gradient(
+      120% 120% at 0% 0%,
+      rgba(59, 130, 246, 0.06) 0%,
+      rgba(99, 102, 241, 0.06) 30%,
+      rgba(17, 24, 39, 0.8) 60%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(31, 41, 55, 0.7) 0%,
+      rgba(17, 24, 39, 0.9) 100%
+    );
+  border: 1px solid rgba(75, 85, 99, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Enhanced Animation Keyframes */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes gradient-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes thumbnail-glow {
+  0%,
+  100% {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Enhanced Animation Classes */
+.animate-slide-in-right {
+  animation: slide-in-right 0.6s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s ease-out forwards;
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.6s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-gradient-wave {
+  animation: gradient-wave 8s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+.animate-thumbnail-glow {
+  animation: thumbnail-glow 2s ease-in-out infinite;
+}
+
+/* Additional showcase/icon animations */
+@keyframes slide-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+.animate-slide-out-left {
+  animation: slide-out-left 0.6s ease-in forwards;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up {
+  animation: slide-up 0.5s ease-out both;
+}
+.animate-slide-up-delayed {
+  animation: slide-up 0.6s ease-out 0.08s both;
+}
+.animate-slide-up-more-delayed {
+  animation: slide-up 0.7s ease-out 0.16s both;
+}
+
+/* Icon: typing dots */
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+.animate-typing1 {
+  animation: typing 1.4s ease-in-out infinite;
+}
+.animate-typing2 {
+  animation: typing 1.4s ease-in-out 0.15s infinite;
+}
+.animate-typing3 {
+  animation: typing 1.4s ease-in-out 0.3s infinite;
+}
+
+/* Icon: orbiting dot around center (24,24) of 48x48 viewBox */
+@keyframes orbit {
+  from {
+    transform: rotate(0deg) translateZ(0);
+  }
+  to {
+    transform: rotate(360deg) translateZ(0);
+  }
+}
+.animate-orbit {
+  transform-origin: 24px 24px;
+  transform-box: view-box;
+  animation: orbit 6s linear infinite;
+}
+
+/* Icon: dashed geofence ring */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+.animate-dash {
+  animation: dash 2s linear infinite;
+  stroke-dashoffset: 0;
+}
+
+/* Icon: soft ping pulse */
+@keyframes soft-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  70% {
+    transform: scale(1.25);
+    opacity: 0.05;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 0;
+  }
+}
+.animate-soft-ping {
+  transform-origin: center;
+  transform-box: fill-box;
+  animation: soft-ping 1.8s ease-out infinite;
+}
+
+/* Icon: draw-in lines/signature */
+@keyframes draw-line {
+  from {
+    transform: scaleX(0);
+    opacity: 0.6;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+.animate-draw {
+  transform-origin: left center;
+  transform-box: fill-box;
+  animation: draw-line 1.2s ease-out forwards;
+}
+
+/* Icon: pen nib subtle write motion */
+@keyframes pen-move {
+  0% {
+    transform: translate(0, 0) rotate(-8deg);
+  }
+  50% {
+    transform: translate(2px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(-8deg);
+  }
+}
+.animate-pen {
+  animation: pen-move 1.4s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+/* Utility: delayed float */
+.animate-float-delayed {
+  animation: float 3s ease-in-out 0.8s infinite;
+}
+
+/* Enhanced Hover States */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.hover-scale {
+  transition: transform 0.2s ease-in-out;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Crossfade Transitions */
+.crossfade-enter {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.crossfade-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+.crossfade-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.crossfade-exit-active {
+  opacity: 0;
+  transform: scale(1.05);
+  transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+/* Progress bar widths */
+.progress-0 {
+  width: 0%;
+}
+.progress-20 {
+  width: 20%;
+}
+.progress-40 {
+  width: 40%;
+}
+.progress-60 {
+  width: 60%;
+}
+.progress-80 {
+  width: 80%;
+}
+.progress-100 {
+  width: 100%;
+}
+
+/* Animation delays */
+.delay-05 {
+  animation-delay: 0.5s;
+}
+
+/* Dynamic positioning - will be set via CSS custom properties */
+.dynamic-position {
+  left: var(--position-x, 50%);
+  top: var(--position-y, 50%);
+}
+
+/* Indeterminate progress animation for demo modal */
+@keyframes progress-move {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+.progress-indeterminate {
+  background: linear-gradient(90deg, #3b82f6, #6366f1, #3b82f6);
+  animation: progress-move 1.2s linear infinite;
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Truck, ChevronDown } from 'lucide-react';
+import { Menu, X, Truck } from 'lucide-react';
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +28,7 @@ export default function Navigation() {
     <nav
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200'
+          ? 'bg-gray-900/80 backdrop-blur-md border-b border-gray-800'
           : 'bg-transparent'
       }`}
     >
@@ -36,10 +36,10 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <Truck className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold gradient-text">Dispatch</span>
+            <span className="text-xl font-bold text-gray-100">Dispatch</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -48,7 +48,7 @@ export default function Navigation() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium"
+                className="text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium"
               >
                 {item.name}
               </Link>
@@ -59,13 +59,13 @@ export default function Navigation() {
           <div className="hidden md:flex items-center space-x-4">
             <Link
               href="/auth/signin"
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200 font-medium"
+              className="text-gray-300 hover:text-blue-400 transition-colors duration-200 font-medium"
             >
               Sign In
             </Link>
             <Link
               href="/auth/signup"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
             >
               Get Started
             </Link>
@@ -75,7 +75,7 @@ export default function Navigation() {
           <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              className="text-gray-300 hover:text-blue-400 transition-colors duration-200"
             >
               {isOpen ? (
                 <X className="w-6 h-6" />
@@ -89,12 +89,12 @@ export default function Navigation() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white/95 backdrop-blur-md rounded-lg mt-2 shadow-lg border border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-gray-900/90 backdrop-blur-md rounded-lg mt-2 shadow-lg border border-gray-800">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium"
+                  className="block px-3 py-2 text-gray-300 hover:text-blue-400 hover:bg-gray-800 rounded-md transition-colors duration-200 font-medium"
                   onClick={() => setIsOpen(false)}
                 >
                   {item.name}
@@ -103,14 +103,14 @@ export default function Navigation() {
               <div className="border-t border-gray-200 pt-2 mt-2">
                 <Link
                   href="/auth/signin"
-                  className="block px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200 font-medium"
+                  className="block px-3 py-2 text-gray-300 hover:text-blue-400 hover:bg-gray-800 rounded-md transition-colors duration-200 font-medium"
                   onClick={() => setIsOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/auth/signup"
-                  className="block px-3 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-md hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium mx-3 mt-2"
+                  className="block px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-medium mx-3 mt-2"
                   onClick={() => setIsOpen(false)}
                 >
                   Get Started

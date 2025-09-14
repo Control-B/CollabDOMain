@@ -57,7 +57,7 @@ export default function SignUpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
@@ -81,10 +81,10 @@ export default function SignUpPage() {
                 </span>
               </Link>
 
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-3xl font-bold text-gray-100 mb-4">
                 Join Thousands of Trucking Companies
               </h2>
-              <p className="text-gray-600 text-lg leading-relaxed">
+              <p className="text-gray-400 text-lg leading-relaxed">
                 Transform your operations with Dispatch. Streamline your fleet
                 management, eliminate paperwork, and connect your team like
                 never before.
@@ -102,7 +102,7 @@ export default function SignUpPage() {
               ))}
             </div>
 
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 text-white">
               <h3 className="text-lg font-semibold mb-2">
                 Ready to get started?
               </h3>
@@ -114,7 +114,7 @@ export default function SignUpPage() {
           </div>
 
           {/* Right Side - Sign Up Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="surface-card rounded-2xl shadow-xl p-8">
             <div className="lg:hidden text-center mb-6">
               <Link
                 href="/"
@@ -127,10 +127,10 @@ export default function SignUpPage() {
                   Dispatch
                 </span>
               </Link>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-gray-100 mb-2">
                 Create Your Account
               </h2>
-              <p className="text-gray-600">Start your free trial today</p>
+              <p className="text-gray-400">Start your free trial today</p>
             </div>
 
             <div className="hidden lg:block mb-6">
@@ -161,7 +161,7 @@ export default function SignUpPage() {
                       required
                       value={formData.firstName}
                       onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="block w-full pl-10 pr-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder="John"
                     />
                   </div>
@@ -180,7 +180,7 @@ export default function SignUpPage() {
                     required
                     value={formData.lastName}
                     onChange={handleChange}
-                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full px-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="Doe"
                   />
                 </div>
@@ -205,7 +205,7 @@ export default function SignUpPage() {
                     required
                     value={formData.email}
                     onChange={handleChange}
-                    className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full pl-10 pr-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="john@company.com"
                   />
                 </div>
@@ -230,7 +230,7 @@ export default function SignUpPage() {
                       type="text"
                       value={formData.company}
                       onChange={handleChange}
-                      className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="block w-full pl-10 pr-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder="ABC Trucking"
                     />
                   </div>
@@ -248,7 +248,7 @@ export default function SignUpPage() {
                     type="tel"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="block w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full px-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -274,7 +274,7 @@ export default function SignUpPage() {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="block w-full pl-10 pr-10 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder="Create password"
                     />
                     <button
@@ -305,7 +305,7 @@ export default function SignUpPage() {
                       required
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="block w-full px-3 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                      className="block w-full px-3 py-3 pr-10 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                       placeholder="Confirm password"
                     />
                     <button
@@ -335,23 +335,23 @@ export default function SignUpPage() {
                     required
                     checked={formData.agreeToTerms}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-700 rounded mt-1 bg-gray-900"
                   />
                   <label
                     htmlFor="agreeToTerms"
-                    className="ml-2 block text-sm text-gray-700"
+                    className="ml-2 block text-sm text-gray-300"
                   >
                     I agree to the{' '}
                     <Link
                       href="#"
-                      className="text-blue-600 hover:text-blue-500"
+                      className="text-blue-400 hover:text-blue-300"
                     >
                       Terms of Service
                     </Link>{' '}
                     and{' '}
                     <Link
                       href="#"
-                      className="text-blue-600 hover:text-blue-500"
+                      className="text-blue-400 hover:text-blue-300"
                     >
                       Privacy Policy
                     </Link>
@@ -364,11 +364,11 @@ export default function SignUpPage() {
                     type="checkbox"
                     checked={formData.subscribeNewsletter}
                     onChange={handleChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                    className="h-4 w-4 text-blue-500 focus:ring-blue-500 border-gray-700 rounded mt-1 bg-gray-900"
                   />
                   <label
                     htmlFor="subscribeNewsletter"
-                    className="ml-2 block text-sm text-gray-700"
+                    className="ml-2 block text-sm text-gray-300"
                   >
                     Subscribe to our newsletter for updates and tips
                   </label>
@@ -388,10 +388,10 @@ export default function SignUpPage() {
             <div className="mt-6">
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+                  <div className="w-full border-t border-gray-700" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">
+                  <span className="px-2 bg-transparent text-gray-400">
                     Or continue with
                   </span>
                 </div>
@@ -403,7 +403,7 @@ export default function SignUpPage() {
               {socialProviders.map((provider) => (
                 <button
                   key={provider.name}
-                  className={`w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-white ${provider.color} transition-colors duration-200`}
+                  className={`w-full inline-flex justify-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-sm font-medium text-white ${provider.color} transition-colors duration-200`}
                 >
                   <span className="font-bold">{provider.icon}</span>
                 </button>
@@ -412,11 +412,11 @@ export default function SignUpPage() {
 
             {/* Sign In Link */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-400">
                 Already have an account?{' '}
                 <Link
                   href="/auth/signin"
-                  className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
                 >
                   Sign in
                 </Link>
@@ -429,7 +429,7 @@ export default function SignUpPage() {
         <div className="text-center mt-8">
           <Link
             href="/"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to home

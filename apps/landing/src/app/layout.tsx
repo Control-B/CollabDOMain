@@ -33,7 +33,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className={inter.className}>{children}</body>
+      <body
+        className={`${inter.className} min-h-screen text-gray-100 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950 pt-16 md:pt-20`}
+      >
+        {children}
+      </body>
     </html>
   );
 }

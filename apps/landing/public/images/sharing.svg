@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <style>
+    @keyframes linkPulse { 0%,100% { stroke-opacity: .35; } 50% { stroke-opacity: .9; } }
+    @keyframes nodePing { 0% { r: 56; opacity:.12; } 70% { r: 86; opacity:0; } 100% { r: 86; opacity:0; } }
+    @keyframes shimmer { 0% { stroke-dashoffset: 160; } 100% { stroke-dashoffset: 0; } }
+    .edge { stroke: #334155; stroke-width: 8; stroke-linecap: round; }
+    .edgeActive { stroke: url(#g); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 160; animation: shimmer 3.2s ease-in-out infinite; }
+    @media (prefers-reduced-motion: reduce) {
+      .edgeActive { animation: none !important; }
+    }
+  </style>
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#84cc16"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="#0b1220"/>
+  <rect x="140" y="140" width="920" height="520" rx="24" fill="#0f172a" stroke="#1f2a44"/>
+
+  <!-- links -->
+  <line x1="420" y1="360" x2="780" y2="280" class="edge"/>
+  <line x1="420" y1="360" x2="780" y2="520" class="edge"/>
+
+  <!-- active secure link shimmer -->
+  <line x1="420" y1="360" x2="780" y2="280" class="edgeActive" style="animation-delay:.2s"/>
+  <line x1="420" y1="360" x2="780" y2="520" class="edgeActive" style="animation-delay:1.2s"/>
+
+  <!-- nodes with ping -->
+  <g>
+    <circle cx="420" cy="360" r="60" fill="url(#g)" opacity="0.35"/>
+    <circle cx="420" cy="360" r="56" fill="none" stroke="url(#g)" style="animation: nodePing 2.8s ease-out infinite"/>
+  </g>
+  <g>
+    <circle cx="780" cy="280" r="60" fill="url(#g)" opacity="0.35"/>
+    <circle cx="780" cy="280" r="56" fill="none" stroke="url(#g)" style="animation: nodePing 2.8s ease-out .6s infinite"/>
+  </g>
+  <g>
+    <circle cx="780" cy="520" r="60" fill="url(#g)" opacity="0.35"/>
+    <circle cx="780" cy="520" r="56" fill="none" stroke="url(#g)" style="animation: nodePing 2.8s ease-out 1.2s infinite"/>
+  </g>
+
+  <!-- traveling document glyphs along links -->
+  <path id="edge1" d="M420 360 L780 280" fill="none"/>
+  <path id="edge2" d="M420 360 L780 520" fill="none"/>
+  <g>
+    <rect x="-10" y="-7" width="20" height="14" rx="2" fill="#a3e635">
+      <animateMotion dur="3s" repeatCount="indefinite" keyTimes="0;1" keySplines=".2,.8,.2,1">
+        <mpath href="#edge1"/>
+      </animateMotion>
+    </rect>
+  </g>
+  <g>
+    <rect x="-10" y="-7" width="20" height="14" rx="2" fill="#86efac">
+      <animateMotion dur="3s" begin="1.2s" repeatCount="indefinite" keyTimes="0;1" keySplines=".2,.8,.2,1">
+        <mpath href="#edge2"/>
+      </animateMotion>
+    </rect>
+  </g>
+
+  <!-- labels -->
+  <rect x="360" y="220" width="120" height="28" rx="8" fill="#132033"/>
+  <rect x="720" y="180" width="120" height="28" rx="8" fill="#132033"/>
+  <rect x="720" y="580" width="120" height="28" rx="8" fill="#132033"/>
+</svg>

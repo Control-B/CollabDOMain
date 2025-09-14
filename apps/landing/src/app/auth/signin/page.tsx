@@ -33,7 +33,7 @@ export default function SignInPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
@@ -50,14 +50,14 @@ export default function SignInPage() {
             <span className="text-2xl font-bold gradient-text">Dispatch</span>
           </Link>
 
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          <h2 className="text-3xl font-bold text-gray-100 mb-2">
             Welcome Back
           </h2>
-          <p className="text-gray-600">Sign in to your Dispatch account</p>
+          <p className="text-gray-400">Sign in to your Dispatch account</p>
         </div>
 
         {/* Sign In Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="surface-card rounded-2xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Field */}
             <div>
@@ -78,7 +78,7 @@ export default function SignInPage() {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="block w-full pl-10 pr-3 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Enter your email"
                 />
               </div>
@@ -103,7 +103,7 @@ export default function SignInPage() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  className="block w-full pl-10 pr-10 py-3 bg-gray-900/60 text-gray-100 placeholder-gray-500 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Enter your password"
                 />
                 <button
@@ -140,7 +140,7 @@ export default function SignInPage() {
               </div>
               <Link
                 href="#"
-                className="text-sm text-blue-600 hover:text-blue-500 transition-colors"
+                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Forgot password?
               </Link>
@@ -159,10 +159,10 @@ export default function SignInPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-gray-700" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
+                <span className="px-2 bg-transparent text-gray-400">
                   Or continue with
                 </span>
               </div>
@@ -174,7 +174,7 @@ export default function SignInPage() {
             {socialProviders.map((provider) => (
               <button
                 key={provider.name}
-                className={`w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-white ${provider.color} transition-colors duration-200`}
+                className={`w-full inline-flex justify-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-sm font-medium text-white ${provider.color} transition-colors duration-200`}
               >
                 <span className="font-bold">{provider.icon}</span>
               </button>
@@ -183,11 +183,11 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Don't have an account?{' '}
               <Link
                 href="/auth/signup"
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Sign up for free
               </Link>
@@ -199,7 +199,7 @@ export default function SignInPage() {
         <div className="text-center">
           <Link
             href="/"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            className="inline-flex items-center text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             Back to home

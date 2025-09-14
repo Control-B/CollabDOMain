@@ -60,17 +60,16 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="features" className="py-20 bg-white">
+    <section id="features" className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Everything You Need to
-            <span className="gradient-text"> Streamline Operations</span>
+          <h2 className="text-3xl md:text-4xl font-bold gradient-text mb-4">
+            Everything You Need to Streamline Operations
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Dispatch brings together all the tools your trucking business needs
             in one powerful platform. From automated check-ins to paperless
-            document management, we've got you covered.
+            document management, we&#39;ve got you covered.
           </p>
         </div>
 
@@ -78,17 +77,17 @@ export default function FeaturesSection() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group p-8 rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
+              className="group p-8 rounded-2xl surface-card hover:border-blue-400/60 hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2"
             >
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                 <feature.icon className="w-8 h-8 text-white" />
               </div>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+              <h3 className="text-xl font-semibold text-gray-100 mb-3">
                 {feature.title}
               </h3>
 
-              <p className="text-gray-600 mb-4 leading-relaxed">
+              <p className="text-gray-400 mb-4 leading-relaxed">
                 {feature.description}
               </p>
 
@@ -96,9 +95,9 @@ export default function FeaturesSection() {
                 {feature.benefits.map((benefit, benefitIndex) => (
                   <li
                     key={benefitIndex}
-                    className="flex items-center text-sm text-gray-500"
+                    className="flex items-center text-sm text-gray-400"
                   >
-                    <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mr-3"></div>
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-3"></div>
                     {benefit}
                   </li>
                 ))}
