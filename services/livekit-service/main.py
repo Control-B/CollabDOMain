@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
@@ -145,6 +145,19 @@ def get_db():
     finally:
         db.close()
 
+# Optional bearer token auth (set LIVEKIT_SERVICE_TOKEN to enable)
+SERVICE_TOKEN = os.getenv("LIVEKIT_SERVICE_TOKEN")
+
+def require_service_auth(authorization: str | None = Header(default=None)):
+    if not SERVICE_TOKEN:
+        return True
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+    token = authorization.split(" ", 1)[1]
+    if token != SERVICE_TOKEN:
+        raise HTTPException(status_code=403, detail="Forbidden")
+    return True
+
 # WebSocket connection manager
 class ConnectionManager:
     def __init__(self):
@@ -199,7 +212,7 @@ async def health_check():
     return {"status": "healthy", "service": "livekit-service"}
 
 @app.post("/api/calls/initiate", response_model=CallResponse)
-async def initiate_call(call_data: CallCreate, db: Session = Depends(get_db)):
+async def initiate_call(call_data: CallCreate, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Initiate a new call"""
     try:
         # Generate unique identifiers
@@ -245,7 +258,7 @@ async def initiate_call(call_data: CallCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Failed to initiate call: {str(e)}")
 
 @app.post("/api/calls/{call_id}/join", response_model=CallResponse)
-async def join_call(call_id: str, join_data: JoinCallRequest, db: Session = Depends(get_db)):
+async def join_call(call_id: str, join_data: JoinCallRequest, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Join an existing call"""
     try:
         # Get call details
@@ -295,7 +308,7 @@ async def join_call(call_id: str, join_data: JoinCallRequest, db: Session = Depe
         raise HTTPException(status_code=500, detail=f"Failed to join call: {str(e)}")
 
 @app.post("/api/calls/{call_id}/start")
-async def start_call(call_id: str, db: Session = Depends(get_db)):
+async def start_call(call_id: str, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Mark call as active/started"""
     call = db.query(Call).filter(Call.call_id == call_id).first()
     if not call:
@@ -307,7 +320,7 @@ async def start_call(call_id: str, db: Session = Depends(get_db)):
     return {"message": "Call started", "call_id": call_id, "status": "active"}
 
 @app.post("/api/calls/{call_id}/end")
-async def end_call(call_id: str, db: Session = Depends(get_db)):
+async def end_call(call_id: str, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """End a call"""
     call = db.query(Call).filter(Call.call_id == call_id).first()
     if not call:
@@ -326,7 +339,7 @@ async def end_call(call_id: str, db: Session = Depends(get_db)):
     return {"message": "Call ended", "call_id": call_id, "duration_seconds": call.duration_seconds}
 
 @app.get("/api/calls/{call_id}", response_model=CallResponse)
-async def get_call(call_id: str, db: Session = Depends(get_db)):
+async def get_call(call_id: str, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Get call details"""
     call = db.query(Call).filter(Call.call_id == call_id).first()
     if not call:
@@ -349,7 +362,7 @@ async def get_call(call_id: str, db: Session = Depends(get_db)):
     )
 
 @app.get("/api/calls/history/{phone_number}", response_model=List[CallHistoryResponse])
-async def get_call_history(phone_number: str, limit: int = 50, db: Session = Depends(get_db)):
+async def get_call_history(phone_number: str, limit: int = 50, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Get call history for a phone number"""
     calls = db.query(Call).filter(
         (Call.caller_phone == phone_number) | (Call.callee_phone == phone_number)
@@ -370,7 +383,7 @@ async def get_call_history(phone_number: str, limit: int = 50, db: Session = Dep
     ]
 
 @app.post("/api/phone-numbers/register", response_model=PhoneNumberResponse)
-async def register_phone_number(phone_number: str, user_id: Optional[int] = None, db: Session = Depends(get_db)):
+async def register_phone_number(phone_number: str, user_id: Optional[int] = None, db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """Register a phone number for calling"""
     # Check if phone number already exists
     existing = db.query(PhoneNumber).filter(PhoneNumber.phone_number == phone_number).first()
@@ -395,7 +408,7 @@ async def register_phone_number(phone_number: str, user_id: Optional[int] = None
     )
 
 @app.get("/api/phone-numbers", response_model=List[PhoneNumberResponse])
-async def list_phone_numbers(db: Session = Depends(get_db)):
+async def list_phone_numbers(db: Session = Depends(get_db), _auth: bool = Depends(require_service_auth)):
     """List all registered phone numbers"""
     phones = db.query(PhoneNumber).filter(PhoneNumber.is_active == True).all()
     

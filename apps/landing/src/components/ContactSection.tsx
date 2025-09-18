@@ -33,26 +33,38 @@ export default function ContactSection() {
     {
       icon: Mail,
       title: 'Email Us',
-      details: 'hello@dispatch.com',
+      details: 'support@dispatchar.com',
       description: "We'll respond within 24 hours",
+      iconBg: 'from-blue-500 to-cyan-500',
+      iconColor: 'text-white',
+      titleColor: 'rgba(59, 130, 246, 1)', // blue-500
     },
     {
       icon: Phone,
       title: 'Call Us',
       details: '+1 (555) 123-4567',
       description: 'Mon-Fri 8AM-6PM EST',
+      iconBg: 'from-green-500 to-emerald-500',
+      iconColor: 'text-white',
+      titleColor: 'rgba(34, 197, 94, 1)', // green-500
     },
     {
       icon: MapPin,
       title: 'Visit Us',
       details: '123 Logistics Ave',
-      description: 'Austin, TX 78701',
+      description: 'Tampa, FL',
+      iconBg: 'from-orange-500 to-red-500',
+      iconColor: 'text-white',
+      titleColor: 'rgba(249, 115, 22, 1)', // orange-500
     },
     {
       icon: Clock,
       title: 'Support Hours',
       details: '24/7 Available',
       description: 'Emergency support always on',
+      iconBg: 'from-purple-500 to-indigo-500',
+      iconColor: 'text-white',
+      titleColor: 'rgba(168, 85, 247, 1)', // purple-500
     },
   ];
 
@@ -64,8 +76,8 @@ export default function ContactSection() {
             Ready to Get Started?
           </h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-            Have questions about Dispatch? Want to see how it can transform your
-            operations? Get in touch with our team of trucking technology
+            Have questions about Dispatchar? Want to see how it can transform
+            your operations? Get in touch with our team of trucking technology
             experts.
           </p>
         </div>
@@ -73,14 +85,17 @@ export default function ContactSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <div className="surface-card rounded-2xl p-8">
-            <h3 className="text-2xl font-bold text-gray-100 mb-6">
+            <h3 className="text-2xl font-bold mb-6" style={{ color: 'white' }}>
               Send us a Message
             </h3>
 
             {isSubmitted ? (
               <div className="text-center py-8">
                 <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
-                <h4 className="text-xl font-semibold text-gray-100 mb-2">
+                <h4
+                  className="text-xl font-semibold mb-2"
+                  style={{ color: 'white' }}
+                >
                   Message Sent!
                 </h4>
                 <p className="text-gray-400">
@@ -93,7 +108,8 @@ export default function ContactSection() {
                   <div>
                     <label
                       htmlFor="name"
-                      className="block text-sm font-medium text-gray-300 mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'white' }}
                     >
                       Full Name *
                     </label>
@@ -111,7 +127,8 @@ export default function ContactSection() {
                   <div>
                     <label
                       htmlFor="email"
-                      className="block text-sm font-medium text-gray-300 mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'white' }}
                     >
                       Email Address *
                     </label>
@@ -132,7 +149,8 @@ export default function ContactSection() {
                   <div>
                     <label
                       htmlFor="company"
-                      className="block text-sm font-medium text-gray-300 mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'white' }}
                     >
                       Company Name
                     </label>
@@ -149,7 +167,8 @@ export default function ContactSection() {
                   <div>
                     <label
                       htmlFor="phone"
-                      className="block text-sm font-medium text-gray-300 mb-2"
+                      className="block text-sm font-medium mb-2"
+                      style={{ color: 'white' }}
                     >
                       Phone Number
                     </label>
@@ -168,7 +187,8 @@ export default function ContactSection() {
                 <div>
                   <label
                     htmlFor="message"
-                    className="block text-sm font-medium text-gray-300 mb-2"
+                    className="block text-sm font-medium mb-2"
+                    style={{ color: 'white' }}
                   >
                     Message *
                   </label>
@@ -198,7 +218,10 @@ export default function ContactSection() {
           {/* Contact Information */}
           <div className="space-y-8">
             <div>
-              <h3 className="text-2xl font-bold text-gray-100 mb-6">
+              <h3
+                className="text-2xl font-bold mb-6"
+                style={{ color: 'white' }}
+              >
                 Get in Touch
               </h3>
               <p className="text-gray-400 mb-8 leading-relaxed">
@@ -211,52 +234,29 @@ export default function ContactSection() {
 
             <div className="space-y-6">
               {contactInfo.map((info, index) => (
-                <div key={index} className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <info.icon className="w-6 h-6 text-white" />
+                <div
+                  key={index}
+                  className="flex items-start space-x-4 group transition-all duration-300 hover:transform hover:translate-x-2"
+                >
+                  <div
+                    className={`w-16 h-16 bg-gradient-to-r ${info.iconBg} rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform duration-300`}
+                  >
+                    <info.icon className={`w-8 h-8 ${info.iconColor}`} />
                   </div>
                   <div>
-                    <h4 className="text-lg font-semibold text-gray-100">
+                    <h4
+                      className="text-xl font-bold mb-1"
+                      style={{ color: info.titleColor }}
+                    >
                       {info.title}
                     </h4>
-                    <p className="text-gray-200 font-medium">{info.details}</p>
+                    <p className="text-gray-200 font-medium mb-1">
+                      {info.details}
+                    </p>
                     <p className="text-gray-400 text-sm">{info.description}</p>
                   </div>
                 </div>
               ))}
-            </div>
-
-            {/* Quick Actions */}
-            <div className="surface-card rounded-xl p-6">
-              <h4 className="text-lg font-semibold text-gray-100 mb-4">
-                Quick Actions
-              </h4>
-              <div className="space-y-3">
-                <button className="w-full text-left p-3 bg-gray-900/60 border border-gray-700 rounded-lg hover:bg-gray-900/80 transition-colors">
-                  <div className="font-medium text-gray-100">
-                    Schedule a Demo
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    See Dispatch in action
-                  </div>
-                </button>
-                <button className="w-full text-left p-3 bg-gray-900/60 border border-gray-700 rounded-lg hover:bg-gray-900/80 transition-colors">
-                  <div className="font-medium text-gray-100">
-                    Download Brochure
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    Get detailed information
-                  </div>
-                </button>
-                <button className="w-full text-left p-3 bg-gray-900/60 border border-gray-700 rounded-lg hover:bg-gray-900/80 transition-colors">
-                  <div className="font-medium text-gray-100">
-                    Start Free Trial
-                  </div>
-                  <div className="text-sm text-gray-400">
-                    No credit card required
-                  </div>
-                </button>
-              </div>
             </div>
           </div>
         </div>

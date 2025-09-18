@@ -65,7 +65,36 @@ public class ChatMessage
     [MaxLength(8)]
     public string? Lang { get; set; } // e.g., en, es, fr, ...
 
+    // WhatsApp-style message metadata
+    [MaxLength(20)]
+    public string MessageType { get; set; } = "text"; // text | file | system
+
+    // Link messages to documents (Box-like)
+    public Guid? DocumentId { get; set; }
+
+    // Threading support
+    public Guid? ReplyToMessageId { get; set; }
+
+    // Delivery/read status for DM/Channels (sent, delivered, read)
+    [MaxLength(20)]
+    public string Status { get; set; } = "sent";
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public class HiddenMessage
+{
+    [Key]
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    [Required]
+    public Guid MessageId { get; set; }
+
+    [Required]
+    [MaxLength(200)]
+    public string UserId { get; set; } = string.Empty;
+
+    public DateTime HiddenAt { get; set; } = DateTime.UtcNow;
 }
 
 public class ChannelMember

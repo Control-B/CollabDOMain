@@ -5,14 +5,14 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Dispatch - Trucking & Logistics Collaboration Platform',
+  title: 'Dispatchar - Trucking & Logistics Collaboration Platform',
   description:
     'Revolutionary collaboration platform for trucking and logistics. Streamline operations with geofence check-ins, paperless document management, and instant communication.',
   keywords:
     'trucking, logistics, collaboration, dispatch, geofence, document management, fleet management',
-  authors: [{ name: 'Dispatch Team' }],
+  authors: [{ name: 'Dispatchar Team' }],
   openGraph: {
-    title: 'Dispatch - Trucking & Logistics Collaboration Platform',
+    title: 'Dispatchar - Trucking & Logistics Collaboration Platform',
     description:
       'Revolutionary collaboration platform for trucking and logistics.',
     type: 'website',
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dispatch - Trucking & Logistics Collaboration Platform',
+    title: 'Dispatchar - Trucking & Logistics Collaboration Platform',
     description:
       'Revolutionary collaboration platform for trucking and logistics.',
   },
@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body
-        className={`${inter.className} min-h-screen text-gray-100 bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950 pt-16 md:pt-20`}
+        className={`${inter.className} min-h-screen text-gray-100 bg-black bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950 pt-16 md:pt-20`}
       >
         {children}
       </body>

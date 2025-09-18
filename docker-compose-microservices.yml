@@ -113,13 +113,63 @@ services:
       - ./services/geofence-service:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8004 --reload
 
-  # Trip Management Service
+  # ETA Prediction Service
+  eta-service:
+    build:
+      context: ./services/eta-service
+      dockerfile: Dockerfile
+    ports:
+      - '8005:8005'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+      - DMS_CORE_URL=http://dms-core:5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/eta-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8005 --reload
+
+  # Appointment & Dock Scheduling Service
+  appointment-service:
+    build:
+      context: ./services/appointment-service
+      dockerfile: Dockerfile
+    ports:
+      - '8006:8006'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/appointment-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8006 --reload
+
+  # Yard & Trailer Management Service
+  yard-management-service:
+    build:
+      context: ./services/yard-management-service
+      dockerfile: Dockerfile
+    ports:
+      - '8007:8007'
+    environment:
+      - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
+      - DMS_CORE_URL=http://dms-core:5000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/yard-management-service:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8007 --reload
+
+  # Trip Management Service (keeping existing)
   trip-service:
     build:
       context: ./services/trip-service
       dockerfile: Dockerfile
     ports:
-      - '8005:8005'
+      - '8008:8008'
     environment:
       - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
     depends_on:
@@ -127,7 +177,7 @@ services:
         condition: service_healthy
     volumes:
       - ./services/trip-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8005 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8008 --reload
 
   # LiveKit Call Service
   livekit-service:
@@ -135,7 +185,7 @@ services:
       context: ./services/livekit-service
       dockerfile: Dockerfile
     ports:
-      - '8006:8006'
+      - '8009:8009'
     environment:
       - DATABASE_URL=postgresql://collab:collab@postgres:5432/collab
       - LIVEKIT_URL=ws://livekit-server:7880
@@ -148,7 +198,7 @@ services:
         condition: service_started
     volumes:
       - ./services/livekit-service:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8006 --reload
+    command: uvicorn main:app --host 0.0.0.0 --port 8009 --reload
 
   # LiveKit Server
   livekit-server:

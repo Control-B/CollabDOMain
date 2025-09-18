@@ -115,7 +115,7 @@ export default function ShowcaseSection() {
           </h2>
           <p className="text-gray-400 text-lg max-w-3xl mx-auto">
             Real time messaging, collaboration, tracking, geofencing, document
-            management, signing, and more—powered by Dispatch.
+            management, signing, and more—powered by Dispatchar.
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function ShowcaseSection() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             {/* Image area with enhanced animations */}
             <div
-              className="relative rounded-xl bg-gray-900/40 border border-gray-800 overflow-hidden group cursor-zoom-in transform transition-all duration-700 hover:scale-[1.02] hover:border-gray-700 hover:shadow-2xl"
+              className="relative rounded-xl bg-gray-900/40 border border-gray-800 overflow-hidden group cursor-pointer transform transition-all duration-700 hover:scale-[1.02] hover:border-gray-700 hover:shadow-2xl"
               onClick={() => setLightbox(true)}
               role="button"
               tabIndex={0}
@@ -143,7 +143,6 @@ export default function ShowcaseSection() {
                 if (e.key === 'Enter' || e.key === ' ') setLightbox(true);
               }}
               aria-label="Open media in lightbox"
-              title="Click to enlarge"
             >
               {/* Enhanced gradient orbs with animation */}
               <div
@@ -247,7 +246,9 @@ export default function ShowcaseSection() {
                 />
                 Live Feature
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-100 mb-3 animate-slide-up">
+              <h3
+                className={`text-2xl md:text-3xl font-bold mb-3 animate-slide-up bg-gradient-to-r ${current.gradient} bg-clip-text text-transparent`}
+              >
                 {current.title}
               </h3>
               <p className="text-gray-400 mb-6 leading-relaxed text-lg animate-slide-up-delayed">
@@ -414,8 +415,12 @@ export default function ShowcaseSection() {
                   />
                 )}
               </div>
-              <div className="absolute bottom-0 left-0 right-0 p-3 text-center text-xs font-medium text-gray-200 bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-sm">
-                {it.title}
+              <div className="absolute bottom-0 left-0 right-0 p-3 text-center text-xs font-medium bg-gradient-to-t from-black/80 via-black/40 to-transparent backdrop-blur-sm">
+                <span
+                  className={`bg-gradient-to-r ${it.gradient} bg-clip-text text-transparent font-semibold`}
+                >
+                  {it.title}
+                </span>
               </div>
 
               {/* Active indicator */}

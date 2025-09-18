@@ -8,6 +8,7 @@ export default function AnimatedDocumentManagement() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUpload, setShowUpload] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(true);
 
   const documents = [
     {
@@ -86,6 +87,15 @@ export default function AnimatedDocumentManagement() {
     };
   }, []);
 
+  // Hide text overlay after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTextOverlay(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const filteredDocs = documents.filter(
     (doc) =>
       doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -141,26 +151,32 @@ export default function AnimatedDocumentManagement() {
         </div>
 
         {/* Attention panel (Documents) */}
-        <div
-          aria-hidden="true"
-          className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg z-10 pointer-events-none transform transition-all duration-500 ${
-            showPanel ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3'
-          }`}
-        >
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-400/60 to-orange-500/60 blur-lg opacity-80 animate-pulse-subtle" />
-          <div className="relative bg-gradient-to-r from-amber-500 to-orange-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
-            <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
-              All docs, one place
+        {showTextOverlay && (
+          <div
+            aria-hidden="true"
+            className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg z-10 pointer-events-none transform transition-all duration-500 ${
+              showPanel
+                ? 'opacity-100 translate-y-0'
+                : 'opacity-0 translate-y-3'
+            }`}
+          >
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-400/60 to-orange-500/60 blur-lg opacity-80 animate-pulse-subtle" />
+            <div className="relative bg-gradient-to-r from-amber-500 to-orange-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
+              <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
+                All docs, one place
+              </div>
+              <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
+                <li className="animate-slide-up">Instant search</li>
+                <li className="animate-slide-up-delayed">
+                  Auto-sync across teams
+                </li>
+                <li className="animate-slide-up-more-delayed">
+                  Version history
+                </li>
+              </ul>
             </div>
-            <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
-              <li className="animate-slide-up">Instant search</li>
-              <li className="animate-slide-up-delayed">
-                Auto-sync across teams
-              </li>
-              <li className="animate-slide-up-more-delayed">Version history</li>
-            </ul>
           </div>
-        </div>
+        )}
 
         {/* Document List */}
         <div className="flex-1 overflow-hidden">

@@ -7,6 +7,7 @@ export default function AnimatedDigitalSigning() {
   const [documentStage, setDocumentStage] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -55,6 +56,15 @@ export default function AnimatedDigitalSigning() {
     };
   }, []);
 
+  // Hide text overlay after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTextOverlay(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="w-full h-full flex items-center justify-center p-8">
       <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md h-96 flex flex-col">
@@ -80,26 +90,32 @@ export default function AnimatedDigitalSigning() {
         </div>
 
         {/* Attention panel (Signing) */}
-        <div
-          aria-hidden="true"
-          className={`absolute left-8 top-20 right-8 z-10 pointer-events-none transform transition-all duration-500 ${
-            showPanel ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'
-          }`}
-        >
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-rose-400/60 to-pink-500/60 blur-lg opacity-80 animate-pulse-subtle" />
-          <div className="relative bg-gradient-to-r from-rose-500 to-pink-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
-            <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
-              Fast, compliant e-sign
+        {showTextOverlay && (
+          <div
+            aria-hidden="true"
+            className={`absolute left-8 top-20 right-8 z-10 pointer-events-none transform transition-all duration-500 ${
+              showPanel
+                ? 'opacity-100 translate-x-0'
+                : 'opacity-0 translate-x-4'
+            }`}
+          >
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-rose-400/60 to-pink-500/60 blur-lg opacity-80 animate-pulse-subtle" />
+            <div className="relative bg-gradient-to-r from-rose-500 to-pink-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
+              <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
+                Fast, compliant e-sign
+              </div>
+              <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
+                <li className="animate-slide-up">Sign anywhere</li>
+                <li className="animate-slide-up-delayed">
+                  Audit trails built-in
+                </li>
+                <li className="animate-slide-up-more-delayed">
+                  Tamper evidence
+                </li>
+              </ul>
             </div>
-            <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
-              <li className="animate-slide-up">Sign anywhere</li>
-              <li className="animate-slide-up-delayed">
-                Audit trails built-in
-              </li>
-              <li className="animate-slide-up-more-delayed">Tamper evidence</li>
-            </ul>
           </div>
-        </div>
+        )}
 
         {/* Document */}
         <div className="flex-1 p-6 bg-gray-50 relative overflow-hidden">

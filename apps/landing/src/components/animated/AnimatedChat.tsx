@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 export default function AnimatedChat() {
   const [messageCount, setMessageCount] = useState(0);
   const [typing, setTyping] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -16,6 +17,15 @@ export default function AnimatedChat() {
     }, 3000);
 
     return () => clearInterval(interval);
+  }, []);
+
+  // Hide text overlay after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTextOverlay(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const messages = [
@@ -114,23 +124,25 @@ export default function AnimatedChat() {
         </div>
 
         {/* Attention panel (Messaging) */}
-        <div className="absolute left-4 bottom-24 md:bottom-20 w-[85%] max-w-lg">
-          <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-400/60 to-indigo-500/60 blur-lg opacity-80 animate-pulse-subtle" />
-          <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
-            <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
-              Stay aligned in real time
+        {showTextOverlay && (
+          <div className="absolute left-4 bottom-24 md:bottom-20 w-[85%] max-w-lg transform transition-all duration-500">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-400/60 to-indigo-500/60 blur-lg opacity-80 animate-pulse-subtle" />
+            <div className="relative bg-gradient-to-r from-blue-500 to-indigo-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
+              <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
+                Stay aligned in real time
+              </div>
+              <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
+                <li className="animate-slide-up">Broadcast updates & alerts</li>
+                <li className="animate-slide-up-delayed">
+                  Read receipts and retries
+                </li>
+                <li className="animate-slide-up-more-delayed">
+                  Mentions and pinned threads
+                </li>
+              </ul>
             </div>
-            <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
-              <li className="animate-slide-up">Broadcast updates & alerts</li>
-              <li className="animate-slide-up-delayed">
-                Read receipts and retries
-              </li>
-              <li className="animate-slide-up-more-delayed">
-                Mentions and pinned threads
-              </li>
-            </ul>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

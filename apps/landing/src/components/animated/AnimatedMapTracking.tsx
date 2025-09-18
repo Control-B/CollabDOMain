@@ -7,6 +7,7 @@ export default function AnimatedMapTracking() {
   const [pulse, setPulse] = useState(false);
   const [showGeofence, setShowGeofence] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -49,6 +50,15 @@ export default function AnimatedMapTracking() {
       clearTimeout(t2);
       clearInterval(cycle);
     };
+  }, []);
+
+  // Hide text overlay after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTextOverlay(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -236,30 +246,32 @@ export default function AnimatedMapTracking() {
           </div>
 
           {/* Attention panel (Tracking) */}
-          <div
-            aria-hidden="true"
-            className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg pointer-events-none transform transition-all duration-500 ${
-              showPanel
-                ? 'opacity-100 translate-x-0'
-                : 'opacity-0 -translate-x-4'
-            }`}
-          >
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-400/60 to-teal-500/60 blur-lg opacity-80 animate-pulse-subtle" />
-            <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
-              <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
-                Track every mile
+          {showTextOverlay && (
+            <div
+              aria-hidden="true"
+              className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg pointer-events-none transform transition-all duration-500 ${
+                showPanel
+                  ? 'opacity-100 translate-x-0'
+                  : 'opacity-0 -translate-x-4'
+              }`}
+            >
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-emerald-400/60 to-teal-500/60 blur-lg opacity-80 animate-pulse-subtle" />
+              <div className="relative bg-gradient-to-r from-emerald-500 to-teal-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
+                <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
+                  Track every mile
+                </div>
+                <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
+                  <li className="animate-slide-up">Live ETA and status</li>
+                  <li className="animate-slide-up-delayed">
+                    Smart geofence alerts
+                  </li>
+                  <li className="animate-slide-up-more-delayed">
+                    Exception notifications
+                  </li>
+                </ul>
               </div>
-              <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
-                <li className="animate-slide-up">Live ETA and status</li>
-                <li className="animate-slide-up-delayed">
-                  Smart geofence alerts
-                </li>
-                <li className="animate-slide-up-more-delayed">
-                  Exception notifications
-                </li>
-              </ul>
             </div>
-          </div>
+          )}
 
           {/* Geofence notification */}
           {showGeofence && (

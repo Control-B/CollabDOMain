@@ -17,7 +17,7 @@ export default function SolutionsSection() {
       description:
         'Complete visibility and control over your entire fleet. Track vehicles, monitor driver performance, and optimize routes in real-time.',
       stats: 'Reduce fuel costs by 15%',
-      color: 'from-blue-500 to-blue-600',
+      color: 'from-blue-600 to-blue-700',
     },
     {
       icon: Building2,
@@ -25,7 +25,7 @@ export default function SolutionsSection() {
       description:
         'Streamline terminal operations with automated check-ins, digital paperwork, and instant communication between drivers and staff.',
       stats: 'Eliminate 90% of paperwork',
-      color: 'from-green-500 to-green-600',
+      color: 'from-green-600 to-green-700',
     },
     {
       icon: Package,
@@ -33,7 +33,7 @@ export default function SolutionsSection() {
       description:
         'Provide customers with real-time delivery updates. Automated notifications and proof of delivery with photo capture.',
       stats: 'Improve customer satisfaction by 40%',
-      color: 'from-purple-500 to-purple-600',
+      color: 'from-purple-600 to-purple-700',
     },
     {
       icon: Users2,
@@ -41,7 +41,7 @@ export default function SolutionsSection() {
       description:
         'Keep your drivers connected with instant messaging, emergency alerts, and important updates from dispatch.',
       stats: 'Reduce communication delays by 80%',
-      color: 'from-orange-500 to-orange-600',
+      color: 'from-yellow-600 to-amber-600',
     },
     {
       icon: Clock,
@@ -49,7 +49,7 @@ export default function SolutionsSection() {
       description:
         'Automated hours of service tracking, maintenance reminders, and safety compliance reporting to keep you DOT compliant.',
       stats: 'Zero compliance violations',
-      color: 'from-red-500 to-red-600',
+      color: 'from-red-500 to-rose-600',
     },
     {
       icon: DollarSign,
@@ -57,7 +57,7 @@ export default function SolutionsSection() {
       description:
         'Reduce operational costs with route optimization, fuel tracking, and automated expense management.',
       stats: 'Save $50K+ annually',
-      color: 'from-teal-500 to-teal-600',
+      color: 'from-teal-600 to-teal-700',
     },
   ];
 
@@ -70,7 +70,7 @@ export default function SolutionsSection() {
           </h2>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto">
             Whether you&#39;re managing a small fleet or a large logistics
-            operation, Dispatch provides tailored solutions to address your
+            operation, Dispatchar provides tailored solutions to address your
             specific needs and challenges.
           </p>
         </div>
@@ -92,7 +92,9 @@ export default function SolutionsSection() {
                   <solution.icon className="w-8 h-8 text-white" />
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-100 mb-3">
+                <h3
+                  className={`text-xl font-semibold mb-3 bg-gradient-to-r ${solution.color} bg-clip-text text-transparent`}
+                >
                   {solution.title}
                 </h3>
 
@@ -113,12 +115,12 @@ export default function SolutionsSection() {
         {/* Call to Action */}
         <div className="text-center mt-16">
           <div className="surface-card rounded-2xl p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-gray-100 mb-4">
+            <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
               Ready to Transform Your Operations?
             </h3>
             <p className="text-gray-400 mb-6">
               Join thousands of trucking companies that have already
-              revolutionized their operations with Dispatch.
+              revolutionized their operations with Dispatchar.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold">

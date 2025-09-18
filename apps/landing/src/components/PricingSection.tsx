@@ -91,7 +91,9 @@ export default function PricingSection() {
               )}
 
               <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-gray-100 mb-2">
+                <h3
+                  className={`text-2xl font-bold mb-2 bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}
+                >
                   {plan.name}
                 </h3>
                 <p className="text-gray-400 mb-4">{plan.description}</p>
@@ -132,12 +134,12 @@ export default function PricingSection() {
           <div className="surface-card rounded-2xl p-8 max-w-4xl mx-auto">
             <div className="flex items-center justify-center mb-4">
               <Zap className="w-8 h-8 text-yellow-400 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-100">
+              <h3 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                 14-Day Free Trial
               </h3>
             </div>
             <p className="text-gray-400 mb-6">
-              Try Dispatch risk-free for 14 days. No credit card required.
+              Try Dispatchar risk-free for 14 days. No credit card required.
               Cancel anytime with no questions asked.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

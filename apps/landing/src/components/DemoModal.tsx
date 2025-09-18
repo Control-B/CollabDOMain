@@ -56,7 +56,9 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
               {/* Map header */}
               <div className="p-4 border-b border-gray-600">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-white font-semibold">Fleet Overview</h3>
+                  <h3 className="font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    Fleet Overview
+                  </h3>
                   <div className="flex items-center space-x-2 text-sm text-green-400">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                     <span>12 vehicles active</span>
@@ -120,7 +122,7 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
             {/* Geofencing interface */}
             <div className="relative h-full bg-gray-800 rounded-lg border border-gray-600">
               <div className="p-4 border-b border-gray-600">
-                <h3 className="text-white font-semibold">
+                <h3 className="font-semibold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
                   Geofence Monitoring
                 </h3>
               </div>
@@ -185,7 +187,9 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
             <div className="relative h-full bg-gray-800 rounded-lg border border-gray-600">
               <div className="p-4 border-b border-gray-600">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-white font-semibold">Document Hub</h3>
+                  <h3 className="font-semibold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
+                    Document Hub
+                  </h3>
                   <div className="flex items-center space-x-2 text-sm text-amber-400">
                     <span>147 documents</span>
                   </div>
@@ -262,7 +266,9 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
             <div className="relative h-full bg-gray-800 rounded-lg border border-gray-600">
               <div className="p-4 border-b border-gray-600">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-white font-semibold">Team Chat</h3>
+                  <h3 className="font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Team Chat
+                  </h3>
                   <div className="flex items-center space-x-2 text-sm text-green-400">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                     <span>8 online</span>
@@ -440,7 +446,10 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
         {/* Header */}
         <div className="md:col-span-2 flex items-center justify-between p-6 border-b border-gray-700">
           <div>
-            <h2 id="demo-modal-title" className="text-2xl font-bold text-white">
+            <h2
+              id="demo-modal-title"
+              className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent"
+            >
               CollabAzure Demo
             </h2>
             <p className="text-gray-400 mt-1">
@@ -554,7 +563,7 @@ export default function DemoModal({ isOpen, onClose }: DemoModalProps) {
               <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-900/40 text-blue-200 border border-blue-800/50">
                 Chapter {currentStep + 1}/{totalSteps}
               </span>
-              <h3 className="text-lg md:text-xl font-semibold text-white">
+              <h3 className="text-lg md:text-xl font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
                 {current.title}
               </h3>
             </div>

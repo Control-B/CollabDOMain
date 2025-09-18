@@ -178,11 +178,40 @@ app.MapPost("/chat/channels/{id}/messages", async (Guid id, ChatMessage input, H
         AuthorId = userId,
         Body = input.Body,
         Lang = string.IsNullOrWhiteSpace(input.Lang) ? null : input.Lang,
+        MessageType = string.IsNullOrWhiteSpace(input.MessageType) ? "text" : input.MessageType,
+        DocumentId = input.DocumentId,
+        ReplyToMessageId = input.ReplyToMessageId,
         CreatedAt = DateTime.UtcNow
     };
     db.ChatMessages.Add(msg);
     await db.SaveChangesAsync();
     return Results.Created($"/chat/channels/{id}/messages/{msg.Id}", msg);
+}).WithTags("Chat").RequireAuthorization();
+
+// Chat: hide message (soft-hide per user)
+app.MapPost("/chat/messages/{messageId}/hide", async (Guid messageId, HttpContext ctx, AppDbContext db) =>
+{
+    var userId = ctx.User.FindFirst("sub")?.Value ?? "anonymous";
+    var msg = await db.ChatMessages.FindAsync(messageId);
+    if (msg == null) return Results.NotFound(new { error = "Message not found" });
+    var already = await db.Set<HiddenMessage>().FirstOrDefaultAsync(h => h.MessageId == messageId && h.UserId == userId);
+    if (already != null) return Results.Ok(already);
+    var hidden = new HiddenMessage { MessageId = messageId, UserId = userId };
+    db.Add(hidden);
+    await db.SaveChangesAsync();
+    return Results.Ok(hidden);
+}).WithTags("Chat").RequireAuthorization();
+
+// Chat: update delivery/read status (WhatsApp-like)
+app.MapPost("/chat/messages/{messageId}/status", async (Guid messageId, string status, HttpContext ctx, AppDbContext db) =>
+{
+    var msg = await db.ChatMessages.FindAsync(messageId);
+    if (msg == null) return Results.NotFound(new { error = "Message not found" });
+    var allowed = new[] { "sent", "delivered", "read" };
+    if (!allowed.Contains(status)) return Results.BadRequest(new { error = "Invalid status" });
+    msg.Status = status;
+    await db.SaveChangesAsync();
+    return Results.Ok(new { id = msg.Id, status = msg.Status });
 }).WithTags("Chat").RequireAuthorization();
 
 // Documents
@@ -220,6 +249,7 @@ app.MapPost("/documents", async (HttpContext context, AppDbContext db) =>
 
     // TODO: Store file bytes to blob storage; here we only persist metadata
     db.Documents.Add(document);
+    db.DocumentAudits.Add(new DocumentAudit { DocumentId = document.Id, Action = "uploaded", ActorId = userId });
     await db.SaveChangesAsync();
 
     return Results.Created($"/documents/{documentId}", document);
@@ -236,7 +266,8 @@ app.MapGet("/documents/{id}", async (string id, HttpContext context, AppDbContex
     
     if (document == null)
         return Results.NotFound(new { error = "Document not found" });
-    
+    db.DocumentAudits.Add(new DocumentAudit { DocumentId = document.Id, Action = "viewed", ActorId = userId });
+    await db.SaveChangesAsync();
     return Results.Ok(document);
 })
 .WithTags("Documents")
@@ -248,6 +279,7 @@ app.MapDelete("/documents/{id}", async (string id, HttpContext context, AppDbCon
     if (!Guid.TryParse(id, out var gid)) return Results.BadRequest(new { error = "Invalid id" });
     var entity = await db.Documents.FirstOrDefaultAsync(d => d.Id == gid && d.UploadedBy == userId);
     if (entity == null) return Results.NotFound(new { error = "Document not found" });
+    db.DocumentAudits.Add(new DocumentAudit { DocumentId = entity.Id, Action = "deleted", ActorId = userId });
     db.Documents.Remove(entity);
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -270,7 +302,8 @@ app.MapPost("/envelopes", async (HttpContext context, AppDbContext db) =>
         Id = Guid.Parse(envelopeId),
         DocumentId = Guid.Parse(body.DocumentId),
         SignersJson = System.Text.Json.JsonSerializer.Serialize(body.Signers ?? Array.Empty<string>()),
-        Status = "created",
+    Status = "created",
+    Provider = string.IsNullOrWhiteSpace(body.Provider) ? "local" : body.Provider.ToLowerInvariant(),
         CreatedBy = userId,
         CreatedAt = DateTime.UtcNow,
         ExpiresAt = DateTime.UtcNow.AddDays(30)
@@ -320,11 +353,26 @@ app.MapPost("/envelopes/{id}/sign", async (string id, HttpContext context, AppDb
     if (env == null) return Results.NotFound(new { error = "Envelope not found" });
     // Note: Just setting status for demo; real implementation should attach signature blob
     env.Status = "signed";
+    db.SignatureEvents.Add(new SignatureEvent { EnvelopeId = env.Id, EventType = "signed", PayloadJson = null });
     await db.SaveChangesAsync();
     return Results.Ok(new { message = "Document signed successfully" });
 })
 .WithTags("Envelopes")
 .RequireAuthorization();
+
+// Envelopes: provider webhook callback (agnostic)
+app.MapPost("/envelopes/{id}/callback", async (string id, HttpContext context, AppDbContext db) =>
+{
+    var bodyText = await new StreamReader(context.Request.Body).ReadToEndAsync();
+    var signature = context.Request.Headers["X-Signature"].ToString();
+    if (!Guid.TryParse(id, out var gid)) return Results.BadRequest(new { error = "Invalid id" });
+    var env = await db.Envelopes.FirstOrDefaultAsync(e => e.Id == gid);
+    if (env == null) return Results.NotFound(new { error = "Envelope not found" });
+    // Minimal persistence of callback for audit
+    db.SignatureEvents.Add(new SignatureEvent { EnvelopeId = env.Id, EventType = "callback", PayloadJson = bodyText });
+    await db.SaveChangesAsync();
+    return Results.Ok(new { status = "received" });
+}).WithTags("Envelopes");
 
 // Compare (OS&S)
 app.MapPost("/compare", (Osns.CompareRequest req) =>
@@ -373,11 +421,230 @@ app.MapGet("/geofence/zones", async (HttpContext context) =>
 .WithTags("Geofence")
 .RequireAuthorization();
 
-// Inbound events (Service Bus webhook)
-app.MapPost("/events/inbound", () => Results.StatusCode(501))
-    .WithTags("Events");
+// C3-Hive API Endpoints
+
+// Locations Management
+app.MapGet("/api/locations", async (HttpContext context, AppDbContext db) =>
+{
+    var orgId = context.User.FindFirst("org_id")?.Value;
+    if (string.IsNullOrEmpty(orgId)) return Results.BadRequest(new { error = "Organization ID required" });
+    
+    var locations = await db.Locations
+        .Where(l => l.OrgId == Guid.Parse(orgId))
+        .ToListAsync();
+    
+    return Results.Ok(locations);
+})
+.WithTags("Locations")
+.RequireAuthorization();
+
+app.MapPost("/api/locations", async (HttpContext context, AppDbContext db) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<CreateLocationRequest>();
+    if (body == null) return Results.BadRequest(new { error = "Invalid location data" });
+    
+    var userId = context.User.FindFirst("sub")?.Value ?? "anonymous";
+    var orgId = context.User.FindFirst("org_id")?.Value;
+    if (string.IsNullOrEmpty(orgId)) return Results.BadRequest(new { error = "Organization ID required" });
+    
+    var location = new Location
+    {
+        OrgId = Guid.Parse(orgId),
+        Name = body.Name,
+        TimeZone = body.TimeZone ?? "UTC",
+        Address = body.Address,
+        GeojsonGate = body.GeojsonGate,
+        GeojsonYard = body.GeojsonYard
+    };
+    
+    db.Locations.Add(location);
+    await db.SaveChangesAsync();
+    
+    return Results.Created($"/api/locations/{location.Id}", location);
+})
+.WithTags("Locations")
+.RequireAuthorization();
+
+// Appointments Management
+app.MapGet("/api/appointments", async (HttpContext context, AppDbContext db) =>
+{
+    var locationId = context.Request.Query["location_id"].ToString();
+    var status = context.Request.Query["status"].ToString();
+    
+    var query = db.Appointments.AsQueryable();
+    
+    if (!string.IsNullOrEmpty(locationId) && Guid.TryParse(locationId, out var locId))
+        query = query.Where(a => a.LocationId == locId);
+    
+    if (!string.IsNullOrEmpty(status) && Enum.TryParse<AppointmentStatus>(status, out var statusEnum))
+        query = query.Where(a => a.Status == statusEnum);
+    
+    var appointments = await query
+        .OrderBy(a => a.WindowStart)
+        .Take(100)
+        .ToListAsync();
+    
+    return Results.Ok(appointments);
+})
+.WithTags("Appointments")
+.RequireAuthorization();
+
+app.MapPost("/api/appointments", async (HttpContext context, AppDbContext db) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<CreateAppointmentRequest>();
+    if (body == null) return Results.BadRequest(new { error = "Invalid appointment data" });
+    
+    var userId = context.User.FindFirst("sub")?.Value ?? "anonymous";
+    
+    var appointment = new Appointment
+    {
+        LocationId = body.LocationId,
+        CarrierId = body.CarrierId,
+        Po = body.Po,
+        RefNo = body.RefNo,
+        WindowStart = body.WindowStart,
+        WindowEnd = body.WindowEnd,
+        Priority = body.Priority,
+        CreatedBy = userId
+    };
+    
+    db.Appointments.Add(appointment);
+    await db.SaveChangesAsync();
+    
+    return Results.Created($"/api/appointments/{appointment.Id}", appointment);
+})
+.WithTags("Appointments")
+.RequireAuthorization();
+
+// ETA Updates
+app.MapGet("/api/appointments/{appointmentId}/eta", async (string appointmentId, AppDbContext db) =>
+{
+    if (!Guid.TryParse(appointmentId, out var id)) 
+        return Results.BadRequest(new { error = "Invalid appointment ID" });
+    
+    var latestEta = await db.EtaUpdates
+        .Where(e => e.AppointmentId == id)
+        .OrderByDescending(e => e.CreatedAt)
+        .FirstOrDefaultAsync();
+    
+    if (latestEta == null) 
+        return Results.NotFound(new { error = "No ETA found" });
+    
+    return Results.Ok(latestEta);
+})
+.WithTags("ETA")
+.RequireAuthorization();
+
+app.MapPost("/api/appointments/{appointmentId}/eta", async (string appointmentId, HttpContext context, AppDbContext db) =>
+{
+    if (!Guid.TryParse(appointmentId, out var id)) 
+        return Results.BadRequest(new { error = "Invalid appointment ID" });
+    
+    var body = await context.Request.ReadFromJsonAsync<CreateEtaUpdateRequest>();
+    if (body == null) return Results.BadRequest(new { error = "Invalid ETA data" });
+    
+    var appointment = await db.Appointments.FindAsync(id);
+    if (appointment == null) return Results.NotFound(new { error = "Appointment not found" });
+    
+    var etaUpdate = new EtaUpdate
+    {
+        AppointmentId = id,
+        Source = body.Source,
+        Eta = body.Eta,
+        Confidence = body.Confidence,
+        DwellPredMinutes = body.DwellPredMinutes
+    };
+    
+    db.EtaUpdates.Add(etaUpdate);
+    await db.SaveChangesAsync();
+    
+    return Results.Created($"/api/appointments/{appointmentId}/eta/{etaUpdate.Id}", etaUpdate);
+})
+.WithTags("ETA")
+.RequireAuthorization();
+
+// Trailers Management
+app.MapGet("/api/trailers", async (HttpContext context, AppDbContext db) =>
+{
+    var carrierId = context.Request.Query["carrier_id"].ToString();
+    var status = context.Request.Query["status"].ToString();
+    
+    var query = db.Trailers.AsQueryable();
+    
+    if (!string.IsNullOrEmpty(carrierId) && Guid.TryParse(carrierId, out var carId))
+        query = query.Where(t => t.CarrierId == carId);
+    
+    if (!string.IsNullOrEmpty(status) && Enum.TryParse<TrailerStatus>(status, out var statusEnum))
+        query = query.Where(t => t.Status == statusEnum);
+    
+    var trailers = await query
+        .OrderByDescending(t => t.LastSeen)
+        .Take(100)
+        .ToListAsync();
+    
+    return Results.Ok(trailers);
+})
+.WithTags("Trailers")
+.RequireAuthorization();
+
+app.MapPost("/api/trailers", async (HttpContext context, AppDbContext db) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<CreateTrailerRequest>();
+    if (body == null) return Results.BadRequest(new { error = "Invalid trailer data" });
+    
+    var trailer = new Trailer
+    {
+        CarrierId = body.CarrierId,
+        EquipmentType = body.EquipmentType,
+        Plate = body.Plate
+    };
+    
+    db.Trailers.Add(trailer);
+    await db.SaveChangesAsync();
+    
+    return Results.Created($"/api/trailers/{trailer.Id}", trailer);
+})
+.WithTags("Trailers")
+.RequireAuthorization();
+
+// Integration endpoint for service events
+app.MapPost("/events/inbound", async (HttpContext context, AppDbContext db) =>
+{
+    var body = await context.Request.ReadFromJsonAsync<InboundEventRequest>();
+    if (body == null) return Results.BadRequest(new { error = "Invalid event data" });
+    
+    // Log the event
+    var logEvent = new LogisticsEvent
+    {
+        LocationId = body.LocationId,
+        Type = body.Type,
+        RefTable = body.RefTable,
+        RefId = body.RefId,
+        Payload = body.Payload
+    };
+    
+    db.LogisticsEvents.Add(logEvent);
+    await db.SaveChangesAsync();
+    
+    // Forward to real-time chat if needed
+    if (body.Type == EventType.Exception || body.Type == EventType.Eta)
+    {
+        // TODO: Send to chat service for real-time notifications
+        Console.WriteLine($"Event notification: {body.Type} - {body.Payload}");
+    }
+    
+    return Results.Ok(new { status = "received", event_id = logEvent.Id });
+})
+.WithTags("Events");
 
 app.Run();
+
+// Request models for C3-Hive endpoints
+public record CreateLocationRequest(string Name, string? TimeZone, string? Address, string? GeojsonGate, string? GeojsonYard);
+public record CreateAppointmentRequest(Guid LocationId, Guid CarrierId, string? Po, string? RefNo, DateTime WindowStart, DateTime WindowEnd, int Priority);
+public record CreateEtaUpdateRequest(EtaSource Source, DateTime Eta, float Confidence, int? DwellPredMinutes);
+public record CreateTrailerRequest(Guid CarrierId, EquipmentType EquipmentType, string Plate);
+public record InboundEventRequest(Guid LocationId, EventType Type, string? RefTable, Guid? RefId, string? Payload);
 
 // Helper methods for geofencing
 static async Task<object> ProcessGeofenceCheckIn(string userId, double lat, double lng, string geofenceId)
@@ -429,7 +696,7 @@ static double CalculateDistance(double lat, double lng, string geofenceId)
 }
 
 // Request models
-public record CreateEnvelopeRequest(string DocumentId, string[] Signers);
+public record CreateEnvelopeRequest(string DocumentId, string[] Signers, string? Provider);
 public record SignRequest(string Signature, string SignatureType);
 public record GeofenceCheckInRequest(double Latitude, double Longitude, string GeofenceId);
 public record GeofenceEventRequest(string EventType, double Latitude, double Longitude, string? GeofenceId, DateTime Timestamp);

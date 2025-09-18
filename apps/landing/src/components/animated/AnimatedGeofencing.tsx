@@ -7,6 +7,7 @@ export default function AnimatedGeofencing() {
   const [vehiclePosition, setVehiclePosition] = useState({ x: 15, y: 70 });
   const [alertTriggered, setAlertTriggered] = useState(false);
   const [showPanel, setShowPanel] = useState(false);
+  const [showTextOverlay, setShowTextOverlay] = useState(true);
 
   const zones = useMemo(
     () => [
@@ -80,6 +81,15 @@ export default function AnimatedGeofencing() {
       clearTimeout(t2);
       clearInterval(cycle);
     };
+  }, []);
+
+  // Hide text overlay after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTextOverlay(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -244,30 +254,32 @@ export default function AnimatedGeofencing() {
           </svg>
 
           {/* Attention panel (Geofencing) */}
-          <div
-            aria-hidden="true"
-            className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg pointer-events-none transform transition-all duration-500 ${
-              showPanel
-                ? 'opacity-100 translate-y-0'
-                : 'opacity-0 translate-y-3'
-            }`}
-          >
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-400/60 to-sky-500/60 blur-lg opacity-80 animate-pulse-subtle" />
-            <div className="relative bg-gradient-to-r from-cyan-500 to-sky-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
-              <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
-                Smart zone control
+          {showTextOverlay && (
+            <div
+              aria-hidden="true"
+              className={`absolute left-4 bottom-24 md:bottom-20 w-[80%] max-w-lg pointer-events-none transform transition-all duration-500 ${
+                showPanel
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 translate-y-3'
+              }`}
+            >
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-cyan-400/60 to-sky-500/60 blur-lg opacity-80 animate-pulse-subtle" />
+              <div className="relative bg-gradient-to-r from-cyan-500 to-sky-600/90 text-white rounded-xl p-3 md:p-4 shadow-2xl ring-1 ring-white/10">
+                <div className="text-sm md:text-base font-semibold tracking-wide animate-slide-up">
+                  Smart zone control
+                </div>
+                <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
+                  <li className="animate-slide-up">Auto check-in/out</li>
+                  <li className="animate-slide-up-delayed">
+                    Real-time breach alerts
+                  </li>
+                  <li className="animate-slide-up-more-delayed">
+                    Perimeter analytics
+                  </li>
+                </ul>
               </div>
-              <ul className="mt-2 text-xs md:text-sm text-white/90 list-disc list-inside space-y-1">
-                <li className="animate-slide-up">Auto check-in/out</li>
-                <li className="animate-slide-up-delayed">
-                  Real-time breach alerts
-                </li>
-                <li className="animate-slide-up-more-delayed">
-                  Perimeter analytics
-                </li>
-              </ul>
             </div>
-          </div>
+          )}
 
           {/* Status panel */}
           <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-3 shadow-lg">
