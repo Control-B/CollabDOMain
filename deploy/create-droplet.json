@@ -1,0 +1,12 @@
+{
+  "name": "collabdomain-prod",
+  "region": "nyc3",
+  "size": "s-2vcpu-4gb",
+  "image": "docker-20-04",
+  "ssh_keys": [],
+  "backups": true,
+  "ipv6": true,
+  "monitoring": true,
+  "tags": ["collabdomain", "logistics", "production"],
+  "user_data": "#!/bin/bash\n\n# Update system\napt-get update\napt-get upgrade -y\n\n# Install essential tools\napt-get install -y curl wget git htop unzip\n\n# Install Docker Compose\ncurl -L \"https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-$(uname -s)-$(uname -m)\" -o /usr/local/bin/docker-compose\nchmod +x /usr/local/bin/docker-compose\n\n# Create deployment directory\nmkdir -p /opt/collabdomain\ncd /opt/collabdomain\n\n# Clone the repository\ngit clone https://github.com/Control-B/CollabDOMain.git .\n\n# Set up environment\ncp config/digitalocean.env.example .env\n\n# Create logs directory\nmkdir -p logs\n\n# Set permissions\nchown -R docker:docker /opt/collabdomain\n\necho 'Setup complete! Ready for deployment.' > /opt/collabdomain/deployment.log"
+}
