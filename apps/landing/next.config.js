@@ -1,6 +1,5 @@
-import type { NextConfig } from 'next';
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Silence incorrect root inference in monorepos and ensure PostCSS/Tailwind config is discovered
   outputFileTracingRoot: __dirname,
 
@@ -14,6 +13,9 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // Optimize for production deployment
+  output: 'standalone',
 };
 
-export default nextConfig;
+module.exports = nextConfig;
