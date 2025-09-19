@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   Truck,
   ArrowRight,
@@ -145,10 +145,29 @@ export default function HeroSection() {
   const [currentTrustIndex, setCurrentTrustIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skippedVideosRef = useRef<Set<string>>(new Set());
+
+  // Resolve asset URL with optional base path or asset prefix for DigitalOcean subpaths/CDNs
+  const assetPrefix = useMemo(
+    () =>
+      (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_BASE_PATH) ||
+      (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_ASSET_PREFIX) ||
+      '',
+    []
+  );
+  const resolveAsset = useCallback((p: string) => `${assetPrefix}${p}`,[assetPrefix]);
 
   const currentVideo = videoDemos[currentVideoIndex];
-  const currentVideoKey =
-    currentVideo.videoPath || currentVideo.videoSources?.join(',') || currentVideo.id;
+  const resolvedSources = useMemo(() => {
+    if (currentVideo.videoSources && currentVideo.videoSources.length > 0) {
+      return currentVideo.videoSources.map((s) => resolveAsset(s));
+    }
+    if (currentVideo.videoPath) {
+      return [resolveAsset(currentVideo.videoPath)];
+    }
+    return [];
+  }, [currentVideo.videoPath, currentVideo.videoSources, resolveAsset]);
+  const currentVideoKey = resolvedSources.join(',') || currentVideo.id;
 
   // More intuitive and compelling rotating text
   const heroTexts = [
@@ -188,7 +207,7 @@ export default function HeroSection() {
     const video = videoRef.current;
 
     // Animated component: rotate every 8s
-  if (!video || (!currentVideo.videoPath && !currentVideo.videoSources)) {
+    if (!video || resolvedSources.length === 0) {
       const t = setTimeout(() => {
         setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
       }, 8000);
@@ -211,38 +230,61 @@ export default function HeroSection() {
     const handleError = () => {
       // Skip to next on error after short delay
       if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+      // Avoid retrying the same failing source repeatedly within this session
+      skippedVideosRef.current.add(currentVideoKey);
       fallbackTimerRef.current = setTimeout(() => {
         setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
-      }, 1000);
+      }, 800);
+    };
+    const handleCanPlay = () => {
+      // Retry autoplay if the browser initially blocked it
+      if (isPlaying) {
+        video.play().catch(() => {
+          // If still blocked, leave it paused silently
+        });
+      }
+    };
+    const handleStalled = () => {
+      // Network hiccup: try a gentle resume; if not, move on
+      video.play().catch(() => {
+        if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = setTimeout(() => {
+          setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
+        }, 2000);
+      });
     };
 
     video.addEventListener('ended', handleEnded);
     video.addEventListener('loadedmetadata', handleLoaded);
     video.addEventListener('error', handleError);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('stalled', handleStalled);
 
     return () => {
       video.removeEventListener('ended', handleEnded);
       video.removeEventListener('loadedmetadata', handleLoaded);
       video.removeEventListener('error', handleError);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('stalled', handleStalled);
       if (fallbackTimerRef.current) {
         clearTimeout(fallbackTimerRef.current);
         fallbackTimerRef.current = null;
       }
     };
-  }, [currentVideoIndex, currentVideoKey, currentVideo.videoPath, currentVideo.videoSources]);
+  }, [currentVideoIndex, currentVideoKey, resolvedSources.length, isPlaying]);
 
   useEffect(() => {
     const video = videoRef.current;
 
     // Only handle video play/pause if we have a video (not an animated component)
-  if (!video || (!currentVideo.videoPath && !currentVideo.videoSources)) return;
+    if (!video || resolvedSources.length === 0) return;
 
     if (isPlaying) {
       video.play().catch(() => setIsPlaying(false));
     } else {
       video.pause();
     }
-  }, [isPlaying, currentVideoIndex, currentVideoKey, currentVideo.videoPath, currentVideo.videoSources]);
+  }, [isPlaying, currentVideoIndex, currentVideoKey, resolvedSources.length]);
 
   return (
     <section className="relative min-h-screen flex items-start pt-20 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950">
@@ -325,7 +367,7 @@ export default function HeroSection() {
             <div className="relative bg-gray-900/40 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50">
               {/* Video Player or Animated Component */}
               <div className="relative aspect-video bg-black">
-                {currentVideo.videoPath || currentVideo.videoSources ? (
+                {resolvedSources.length > 0 ? (
                   <>
                     <video
                       key={currentVideoKey}
@@ -340,26 +382,26 @@ export default function HeroSection() {
                       playsInline
                       autoPlay
                       controls={false}
-                      preload="metadata"
+                      preload="auto"
+                      crossOrigin="anonymous"
                       onError={(e) => {
                         console.error('Video error:', e);
                         console.error(
                           'Video src:',
-                          currentVideo.videoPath || currentVideo.videoSources
+                          resolvedSources
                         );
                         // If video fails, advance to next demo as a graceful fallback
-                        setTimeout(() => {
-                          setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
-                        }, 1000);
+                        if (!skippedVideosRef.current.has(currentVideoKey)) {
+                          skippedVideosRef.current.add(currentVideoKey);
+                          setTimeout(() => {
+                            setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
+                          }, 800);
+                        }
                       }}
                     >
-                      {currentVideo.videoSources
-                        ? currentVideo.videoSources.map((src) => (
-                            <source key={src} src={src} type="video/mp4" />
-                          ))
-                        : currentVideo.videoPath ? (
-                            <source src={currentVideo.videoPath} type="video/mp4" />
-                          ) : null}
+                      {resolvedSources.map((src) => (
+                        <source key={src} src={src} type="video/mp4" />
+                      ))}
                     </video>
 
                     {/* Video Overlay Controls */}

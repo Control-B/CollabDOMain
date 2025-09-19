@@ -107,6 +107,15 @@ The landing page is ready for deployment to any platform that supports Next.js:
 - AWS Amplify
 - DigitalOcean App Platform
 
+### DigitalOcean notes
+
+If the app is served under a subpath or via CDN, set the following env vars on the service:
+
+- `NEXT_PUBLIC_BASE_PATH` (e.g., `/landing`)
+- `NEXT_PUBLIC_ASSET_PREFIX` (e.g., `https://cdn.example.com`)
+
+The video component resolves asset URLs using these so MP4s load correctly in production. Ensure videos exist under `public/videos/` and are deployed by your platform. If a video can’t be loaded, an animated fallback is shown and the carousel advances automatically.
+
 ## Future Enhancements
 
 - Integration with actual authentication providers
