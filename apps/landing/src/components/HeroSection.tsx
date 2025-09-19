@@ -319,6 +319,17 @@ export default function HeroSection() {
                       muted={true}
                       loop={false}
                       playsInline
+                      autoPlay
+                      onError={(e) => {
+                        console.error('Video error:', e);
+                        console.error('Video src:', currentVideo.videoPath);
+                      }}
+                      onLoadStart={() => {
+                        console.log('Video loading started:', currentVideo.videoPath);
+                      }}
+                      onCanPlay={() => {
+                        console.log('Video can play:', currentVideo.videoPath);
+                      }}
                     />
 
                     {/* Video Overlay Controls */}
