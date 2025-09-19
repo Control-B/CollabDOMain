@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Use static export for App Platform
-  output: 'export',
+  // Use server-side rendering for authentication
+  output: 'standalone',
   trailingSlash: true,
   images: {
     unoptimized: true,
