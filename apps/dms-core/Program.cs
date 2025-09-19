@@ -635,7 +635,7 @@ app.MapPost("/events/inbound", async (HttpContext context, AppDbContext db) =>
     
     return Results.Ok(new { status = "received", event_id = logEvent.Id });
 })
-.WithTags("Events");
+    .WithTags("Events");
 
 // Authentication Endpoints
 app.MapPost("/auth/register", async (RegisterRequest request, AppDbContext db) =>
