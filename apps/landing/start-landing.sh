@@ -14,5 +14,5 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Start the development server
-echo "🌐 Starting Next.js development server on port 3011..."
-./node_modules/.bin/next dev --port 3011
+echo "🌐 Starting Next.js development server on port 3011 (bound to 0.0.0.0)..."
+./node_modules/.bin/next dev --port 3011 --hostname 0.0.0.0

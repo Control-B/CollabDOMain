@@ -10,14 +10,22 @@ import {
   MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
+// Use existing animated components as rich, lightweight stand-ins for missing videos
+import AnimatedChat from './animated/AnimatedChat';
+import AnimatedMapTracking from './animated/AnimatedMapTracking';
+import AnimatedGeofencing from './animated/AnimatedGeofencing';
+import AnimatedDocumentManagement from './animated/AnimatedDocumentManagement';
+import AnimatedCollaboration from './animated/AnimatedCollaboration';
+import AnimatedSharing from './animated/AnimatedSharing';
 
 interface VideoDemo {
   id: string;
   title: string;
   description: string;
   videoPath?: string;
-  component?: React.ComponentType<any>;
-  icon: React.ComponentType<any>;
+  videoSources?: string[]; // optional multiple sources (first existing one will play)
+  component?: React.ComponentType<Record<string, never>>;
+  icon: React.ComponentType<{ className?: string }>; // lucide-react compatible
   features: string[];
   duration: string;
 }
@@ -28,7 +36,9 @@ const videoDemos: VideoDemo[] = [
     title: 'Efficient Digital Trucking',
     description:
       'Digital-first solutions that eliminate paperwork and streamline workflows.',
-    videoPath: '/videos/efficient-digital-trucking.mp4',
+  // Prefer actual video when available; falls back to animation if missing
+  videoPath: '/videos/efficient-digital-trucking.mp4',
+  component: AnimatedMapTracking,
     icon: MapPin,
     features: [
       'Automated Check-ins',
@@ -41,7 +51,13 @@ const videoDemos: VideoDemo[] = [
     id: 'efficient-trucking-1',
     title: 'Advanced Fleet Management',
     description: 'Optimize routes, reduce costs, and improve delivery times.',
-    videoPath: '/videos/efficient-digital-trucking-1.mp4',
+  // Prefer actual video when available; falls back to animation if missing
+  // Switch to the requested "efficient digital trucking1" video with fallback
+  videoSources: [
+    '/videos/efficient-digital-trucking1.mp4',
+    '/videos/efficient-digital-trucking.mp4',
+  ],
+  component: AnimatedCollaboration,
     icon: MapPin,
     features: ['Route Optimization', 'Cost Reduction', 'Performance Analytics'],
     duration: '2:45',
@@ -51,7 +67,8 @@ const videoDemos: VideoDemo[] = [
     title: 'Geofencing Entry Success',
     description:
       'Automatic geofencing eliminates manual check-ins and provides instant notifications.',
-    videoPath: '/videos/geofencing-entry-success.mp4',
+  videoPath: '/videos/geofencing-entry-success.mp4',
+  component: AnimatedGeofencing,
     icon: CheckCircle,
     features: [
       'Automatic Check-ins',
@@ -65,7 +82,8 @@ const videoDemos: VideoDemo[] = [
     title: "Truckers' Realtime Chat",
     description:
       'Real-time messaging between drivers, dispatchers, and fleet managers with instant updates.',
-    videoPath: '/videos/truckers-realtime-chat.mp4',
+  videoPath: '/videos/truckers-realtime-chat.mp4',
+  component: AnimatedChat,
     icon: MessageSquare,
     features: ['Driver Communication', 'Instant Updates', 'Group Messaging'],
     duration: '2:15',
@@ -75,7 +93,8 @@ const videoDemos: VideoDemo[] = [
     title: 'Going Digital',
     description:
       'Monitor fleet status, delivery progress, and driver locations in real-time.',
-    videoPath: '/videos/live-tracking-not-map.mp4',
+  videoPath: '/videos/live-tracking-not-map.mp4',
+  component: AnimatedMapTracking,
     icon: MapPin,
     features: ['Real-time Status', 'Fleet Monitoring', 'Delivery Tracking'],
     duration: '2:30',
@@ -85,7 +104,8 @@ const videoDemos: VideoDemo[] = [
     title: "Truckers' Chat Group",
     description:
       'Group communication channels for coordinating loads, routes, and logistics.',
-    videoPath: '/videos/truckers-chat-group.mp4',
+  videoPath: '/videos/truckers-chat-group.mp4',
+  component: AnimatedCollaboration,
     icon: Users,
     features: ['Group Coordination', 'Load Management', 'Route Planning'],
     duration: '2:10',
@@ -95,7 +115,8 @@ const videoDemos: VideoDemo[] = [
     title: 'Paperwork Overload Solution',
     description:
       'Eliminate paperwork bottlenecks with digital document management and e-signatures.',
-    videoPath: '/videos/paperwork-overload.mp4',
+  videoPath: '/videos/paperwork-overload.mp4',
+  component: AnimatedDocumentManagement,
     icon: CheckCircle,
     features: ['Digital Documents', 'E-Signatures', 'Workflow Automation'],
     duration: '2:40',
@@ -105,7 +126,8 @@ const videoDemos: VideoDemo[] = [
     title: 'Busy Shipping Office',
     description:
       'Streamline busy shipping operations with coordinated workflows and real-time visibility.',
-    videoPath: '/videos/busy-shipping-office.mp4',
+  videoPath: '/videos/busy-shipping-office.mp4',
+  component: AnimatedSharing,
     icon: Users,
     features: [
       'Office Coordination',
@@ -122,8 +144,11 @@ export default function HeroSection() {
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
   const [currentTrustIndex, setCurrentTrustIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentVideo = videoDemos[currentVideoIndex];
+  const currentVideoKey =
+    currentVideo.videoPath || currentVideo.videoSources?.join(',') || currentVideo.id;
 
   // More intuitive and compelling rotating text
   const heroTexts = [
@@ -162,45 +187,62 @@ export default function HeroSection() {
   useEffect(() => {
     const video = videoRef.current;
 
-    // Only set up video event listeners if we have a video (not an animated component)
-    if (!video || currentVideo.component) {
-      // For animated components, use a timer to cycle through demos
-      const timer = setTimeout(() => {
+    // Animated component: rotate every 8s
+  if (!video || (!currentVideo.videoPath && !currentVideo.videoSources)) {
+      const t = setTimeout(() => {
         setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
-      }, 8000); // 8 seconds for animated components
-
-      return () => clearTimeout(timer);
+      }, 8000);
+      return () => clearTimeout(t);
     }
 
-    const handleVideoEnd = () => {
+    const handleEnded = () => {
       setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
     };
+    const handleLoaded = () => {
+      const d = Number.isFinite(video.duration) ? video.duration : undefined;
+      // Clear any previous timer
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+      // Set a conservative fallback slightly longer than duration (cap at 180s)
+      const ms = Math.min(Math.max((d || 60) + 2, 12) * 1000, 180000);
+      fallbackTimerRef.current = setTimeout(() => {
+        setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
+      }, ms);
+    };
+    const handleError = () => {
+      // Skip to next on error after short delay
+      if (fallbackTimerRef.current) clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = setTimeout(() => {
+        setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
+      }, 1000);
+    };
 
-    // Add a fallback timer in case the video doesn't trigger 'ended' event
-    const fallbackTimer = setTimeout(() => {
-      setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
-    }, 10000); // 10 second fallback
-
-    video.addEventListener('ended', handleVideoEnd);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('loadedmetadata', handleLoaded);
+    video.addEventListener('error', handleError);
 
     return () => {
-      video.removeEventListener('ended', handleVideoEnd);
-      clearTimeout(fallbackTimer);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('loadedmetadata', handleLoaded);
+      video.removeEventListener('error', handleError);
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+        fallbackTimerRef.current = null;
+      }
     };
-  }, [currentVideoIndex, videoDemos.length, currentVideo.component]);
+  }, [currentVideoIndex, currentVideoKey, currentVideo.videoPath, currentVideo.videoSources]);
 
   useEffect(() => {
     const video = videoRef.current;
 
     // Only handle video play/pause if we have a video (not an animated component)
-    if (!video || currentVideo.component) return;
+  if (!video || (!currentVideo.videoPath && !currentVideo.videoSources)) return;
 
     if (isPlaying) {
       video.play().catch(() => setIsPlaying(false));
     } else {
       video.pause();
     }
-  }, [isPlaying, currentVideoIndex, currentVideo.component]);
+  }, [isPlaying, currentVideoIndex, currentVideoKey, currentVideo.videoPath, currentVideo.videoSources]);
 
   return (
     <section className="relative min-h-screen flex items-start pt-20 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-900 to-gray-950">
@@ -223,37 +265,20 @@ export default function HeroSection() {
           {/* Left Side - Text Content */}
           <div className="animate-fade-in-up">
             {/* Badge */}
-            <div
-              className="inline-flex items-center px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700/50 text-sm font-medium mb-8"
-              style={{
-                background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              <Truck className="w-4 h-4 mr-2" style={{ color: '#3b82f6' }} />
+            <div className="inline-flex items-center px-4 py-2 rounded-full bg-gray-800/50 border border-gray-700/50 text-sm font-medium mb-8 text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-indigo-500">
+              <Truck className="w-4 h-4 mr-2 text-blue-500" />
               {trustTexts[currentTrustIndex]}
             </div>
 
             {/* Main Heading */}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight">
-              <span style={{ color: 'white' }}>The Future of</span>
+              <span className="text-white">The Future of</span>
               <br />
-              <span
-                className="bg-clip-text text-transparent transition-all duration-500"
-                style={{
-                  background:
-                    'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
+              <span className="text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-indigo-500 transition-all duration-500">
                 {heroTexts[currentTextIndex]}
               </span>
               <br />
-              <span style={{ color: 'white' }}>is Here</span>
+              <span className="text-white">is Here</span>
             </h1>
 
             {/* Subheading */}
@@ -300,65 +325,65 @@ export default function HeroSection() {
             <div className="relative bg-gray-900/40 backdrop-blur-sm rounded-2xl overflow-hidden shadow-2xl border border-gray-700/50">
               {/* Video Player or Animated Component */}
               <div className="relative aspect-video bg-black">
-                {currentVideo.component ? (
-                  <div className="w-full h-full">
-                    <currentVideo.component />
-                  </div>
-                ) : (
+                {currentVideo.videoPath || currentVideo.videoSources ? (
                   <>
                     <video
+                      key={currentVideoKey}
                       ref={videoRef}
-                      src={currentVideo.videoPath}
-                      className="w-full h-full object-cover"
-                      style={{
-                        objectPosition:
-                          currentVideo.id === 'truckers-chat-group'
-                            ? 'center 80%'
-                            : 'center center',
-                      }}
+                      className={`w-full h-full object-cover ${
+                        currentVideo.id === 'truckers-chat-group'
+                          ? 'object-[center_80%]'
+                          : 'object-center'
+                      }`}
                       muted={true}
                       loop={false}
                       playsInline
                       autoPlay
+                      controls={false}
+                      preload="metadata"
                       onError={(e) => {
                         console.error('Video error:', e);
-                        console.error('Video src:', currentVideo.videoPath);
-                      }}
-                      onLoadStart={() => {
-                        console.log(
-                          'Video loading started:',
-                          currentVideo.videoPath,
+                        console.error(
+                          'Video src:',
+                          currentVideo.videoPath || currentVideo.videoSources
                         );
+                        // If video fails, advance to next demo as a graceful fallback
+                        setTimeout(() => {
+                          setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
+                        }, 1000);
                       }}
-                      onCanPlay={() => {
-                        console.log('Video can play:', currentVideo.videoPath);
-                      }}
-                    />
+                    >
+                      {currentVideo.videoSources
+                        ? currentVideo.videoSources.map((src) => (
+                            <source key={src} src={src} type="video/mp4" />
+                          ))
+                        : currentVideo.videoPath ? (
+                            <source src={currentVideo.videoPath} type="video/mp4" />
+                          ) : null}
+                    </video>
 
                     {/* Video Overlay Controls */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent">
                       {/* Bottom Left - Video Title */}
                       <div className="absolute bottom-4 left-4">
                         <div className="bg-black/50 rounded-lg px-3 py-2">
-                          <h3
-                            className="font-semibold text-sm"
-                            style={{ color: 'white' }}
-                          >
+                          <h3 className="font-semibold text-sm text-white">
                             {currentVideo.title}
                           </h3>
                         </div>
                       </div>
                     </div>
                   </>
+                ) : (
+                  <div className="w-full h-full">
+                    {currentVideo.component && <currentVideo.component />}
+                  </div>
                 )}
               </div>
 
               {/* Video Info */}
               <div className="p-6">
-                <h2
-                  className="text-xl font-bold mb-2"
-                  style={{ color: 'white' }}
-                >
+                <h2 className="text-xl font-bold mb-2 text-white">
                   {currentVideo.title}
                 </h2>
                 <p className="text-gray-400 mb-4 text-sm">

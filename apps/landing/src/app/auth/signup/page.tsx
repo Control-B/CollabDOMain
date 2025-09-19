@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-// import { signIn } from 'next-auth/react'; // Temporarily disabled
+// import { signIn } from 'next-auth/react'; // For same-app NextAuth; not used here
 import {
   Eye,
   EyeOff,
@@ -17,7 +16,6 @@ import {
 import CollabLogo from '@/components/CollabLogo';
 
 export default function SignUpPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,20 +76,11 @@ export default function SignUpPage() {
         return;
       }
 
-      // Auto sign in after successful registration
-      const result = await signIn('credentials', {
-        email: formData.email,
-        password: formData.password,
-        redirect: false,
-      });
-
-      if (result?.ok) {
-        // Redirect to web app
-        window.location.href = 'http://localhost:3010/dashboard';
-      } else {
-        setError('Registration successful, but sign in failed. Please try signing in manually.');
-      }
-    } catch (error) {
+      // Redirect to Web app's NextAuth sign-in to complete auth
+  const webBase = process.env.NEXT_PUBLIC_WEB_URL || 'http://127.0.0.1:3010';
+      const callbackUrl = encodeURIComponent(`${webBase}/chat`);
+      window.location.href = `${webBase}/api/auth/signin?callbackUrl=${callbackUrl}`;
+    } catch {
       setError('An error occurred during registration. Please try again.');
     } finally {
       setIsLoading(false);
@@ -103,16 +92,12 @@ export default function SignUpPage() {
     setError('');
     
     try {
-      // For now, redirect to a success page since we don't have NextAuth
-      // In a real implementation, you would integrate with the provider's OAuth
-      console.log(`Social sign-up with ${provider} - redirecting to dashboard`);
-      
-      // Simulate a successful sign-up
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-      
-    } catch (error) {
+  const webBase = process.env.NEXT_PUBLIC_WEB_URL || 'http://127.0.0.1:3010';
+      const name = provider.toLowerCase();
+      const mapped = name === 'microsoft' ? 'azure-ad' : name; // map to NextAuth provider id
+      const callbackUrl = encodeURIComponent(`${webBase}/chat`);
+      window.location.href = `${webBase}/api/auth/signin/${mapped}?callbackUrl=${callbackUrl}`;
+    } catch {
       setError('Social sign-up is temporarily unavailable. Please use email sign-up.');
       setIsLoading(false);
     }

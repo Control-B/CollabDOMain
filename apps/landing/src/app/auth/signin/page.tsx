@@ -2,13 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 // import { signIn, getSession } from 'next-auth/react'; // Temporarily disabled
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import CollabLogo from '@/components/CollabLogo';
 
 export default function SignInPage() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -29,27 +28,21 @@ export default function SignInPage() {
             setTimeout(() => {
               window.location.href = 'http://localhost:3010/dashboard';
             }, 1000);
-          } catch (error) {
+          } catch {
             setError('An error occurred. Please try again.');
             setIsLoading(false);
           }
         };
 
-  const handleSocialSignIn = async (provider: string) => {
+  const handleSocialSignIn = async () => {
     setIsLoading(true);
     setError('');
-    
     try {
-      // For now, redirect to a success page since we don't have NextAuth
-      // In a real implementation, you would integrate with the provider's OAuth
-      console.log(`Social sign-in with ${provider} - redirecting to dashboard`);
-      
-      // Simulate a successful sign-in
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1000);
-      
-    } catch (error) {
+  const webBase = process.env.NEXT_PUBLIC_WEB_URL || 'http://127.0.0.1:3010';
+      const callbackUrl = encodeURIComponent(`${webBase}/chat`);
+      // Redirect to generic NextAuth sign-in page; it lists available providers
+      window.location.href = `${webBase}/api/auth/signin?callbackUrl=${callbackUrl}`;
+  } catch {
       setError('Social sign-in is temporarily unavailable. Please use email sign-in.');
       setIsLoading(false);
     }
@@ -262,7 +255,7 @@ export default function SignInPage() {
             {socialProviders.map((provider) => (
               <button
                 key={provider.name}
-                onClick={() => handleSocialSignIn(provider.name.toLowerCase())}
+                onClick={() => handleSocialSignIn()}
                 disabled={isLoading}
                 className={`w-full inline-flex items-center justify-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-colors duration-200 ${provider.color} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -277,7 +270,7 @@ export default function SignInPage() {
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-400">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{' '}
               <Link
                 href="/auth/signup"
                 className="font-medium text-blue-400 hover:text-blue-300 transition-colors"

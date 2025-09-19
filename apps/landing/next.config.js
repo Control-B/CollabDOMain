@@ -6,6 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Silence monorepo root detection warning for output file tracing
+  outputFileTracingRoot: '/Users/banjahmarah/CollabDOmain/CollabDOMain',
   
   // Disable all problematic features
   eslint: {
