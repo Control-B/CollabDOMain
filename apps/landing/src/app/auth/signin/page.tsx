@@ -2,21 +2,57 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signIn, getSession } from 'next-auth/react';
 import { Eye, EyeOff, Mail, Lock, ArrowLeft } from 'lucide-react';
 import CollabLogo from '@/components/CollabLogo';
 
 export default function SignInPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log('Sign in:', formData);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError('Invalid email or password');
+      } else if (result?.ok) {
+        // Redirect to web app
+        window.location.href = 'http://localhost:3010/dashboard';
+      }
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialSignIn = async (provider: string) => {
+    setIsLoading(true);
+    try {
+      await signIn(provider, { 
+        callbackUrl: 'http://localhost:3010/dashboard' 
+      });
+    } catch (error) {
+      setError('An error occurred with social sign in.');
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -190,12 +226,20 @@ export default function SignInPage() {
               </Link>
             </div>
 
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {error}
+              </div>
+            )}
+
             {/* Sign In Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isLoading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
@@ -218,7 +262,9 @@ export default function SignInPage() {
             {socialProviders.map((provider) => (
               <button
                 key={provider.name}
-                className={`w-full inline-flex items-center justify-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-colors duration-200 ${provider.color}`}
+                onClick={() => handleSocialSignIn(provider.name.toLowerCase())}
+                disabled={isLoading}
+                className={`w-full inline-flex items-center justify-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-colors duration-200 ${provider.color} disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <div className="w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">
                   {provider.icon}

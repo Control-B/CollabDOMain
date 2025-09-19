@@ -637,7 +637,204 @@ app.MapPost("/events/inbound", async (HttpContext context, AppDbContext db) =>
 })
 .WithTags("Events");
 
+// Authentication Endpoints
+app.MapPost("/auth/register", async (RegisterRequest request, AppDbContext db) =>
+{
+    // Validate password confirmation
+    if (request.Password != request.ConfirmPassword)
+        return Results.BadRequest(new { error = "Passwords do not match" });
+
+    // Check if user already exists
+    var existingUser = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+    if (existingUser != null)
+        return Results.BadRequest(new { error = "User with this email already exists" });
+
+    // Hash password
+    var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+    // Create user
+    var user = new User
+    {
+        Email = request.Email,
+        FirstName = request.FirstName,
+        LastName = request.LastName,
+        Company = request.Company,
+        Phone = request.Phone,
+        PasswordHash = passwordHash,
+        Roles = new[] { "User" }
+    };
+
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
+    // Generate JWT token
+    var token = GenerateJwtToken(user);
+
+    return Results.Ok(new AuthResponse
+    {
+        Token = token,
+        User = new UserInfo
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Company = user.Company,
+            Phone = user.Phone,
+            TenantId = user.TenantId,
+            FacilityId = user.FacilityId,
+            Roles = user.Roles,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        },
+        ExpiresAt = DateTime.UtcNow.AddDays(7)
+    });
+})
+.WithTags("Auth");
+
+app.MapPost("/auth/login", async (LoginRequest request, AppDbContext db) =>
+{
+    // Find user by email
+    var user = await db.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.IsActive);
+    if (user == null)
+        return Results.BadRequest(new { error = "Invalid email or password" });
+
+    // Verify password
+    if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        return Results.BadRequest(new { error = "Invalid email or password" });
+
+    // Update last login
+    user.LastLoginAt = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+
+    // Generate JWT token
+    var token = GenerateJwtToken(user);
+
+    return Results.Ok(new AuthResponse
+    {
+        Token = token,
+        User = new UserInfo
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Company = user.Company,
+            Phone = user.Phone,
+            TenantId = user.TenantId,
+            FacilityId = user.FacilityId,
+            Roles = user.Roles,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        },
+        ExpiresAt = DateTime.UtcNow.AddDays(7)
+    });
+})
+.WithTags("Auth");
+
+app.MapPost("/auth/social", async (SocialLoginRequest request, AppDbContext db) =>
+{
+    // For now, we'll create a simple social login that doesn't verify the token
+    // In production, you should verify the ID token with the respective provider
+    
+    var user = await db.Users.FirstOrDefaultAsync(u => 
+        (request.Provider == "google" && u.GoogleId == request.IdToken) ||
+        (request.Provider == "apple" && u.AppleId == request.IdToken) ||
+        (request.Provider == "microsoft" && u.MicrosoftId == request.IdToken));
+
+    if (user == null)
+    {
+        // Create new user for social login
+        user = new User
+        {
+            Email = request.Email ?? $"{request.Provider}@{request.Provider}.com",
+            FirstName = request.FirstName ?? "User",
+            LastName = request.LastName ?? "",
+            Company = request.Company,
+            Roles = new[] { "User" }
+        };
+
+        // Set the appropriate social ID
+        switch (request.Provider)
+        {
+            case "google":
+                user.GoogleId = request.IdToken;
+                break;
+            case "apple":
+                user.AppleId = request.IdToken;
+                break;
+            case "microsoft":
+                user.MicrosoftId = request.IdToken;
+                break;
+        }
+
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+    }
+
+    // Update last login
+    user.LastLoginAt = DateTime.UtcNow;
+    await db.SaveChangesAsync();
+
+    // Generate JWT token
+    var token = GenerateJwtToken(user);
+
+    return Results.Ok(new AuthResponse
+    {
+        Token = token,
+        User = new UserInfo
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Company = user.Company,
+            Phone = user.Phone,
+            TenantId = user.TenantId,
+            FacilityId = user.FacilityId,
+            Roles = user.Roles,
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
+        },
+        ExpiresAt = DateTime.UtcNow.AddDays(7)
+    });
+})
+.WithTags("Auth");
+
 app.Run();
+
+// Helper function to generate JWT token
+static string GenerateJwtToken(User user)
+{
+    var jwtIssuer = "collabazure-web";
+    var jwtAudience = "collabazure-api";
+    var jwtSecret = "please-change-me"; // TODO: Use proper secret from configuration
+    
+    var tokenHandler = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler();
+    var key = Encoding.UTF8.GetBytes(jwtSecret);
+    
+    var tokenDescriptor = new Microsoft.IdentityModel.Tokens.SecurityTokenDescriptor
+    {
+        Subject = new System.Security.Claims.ClaimsIdentity(new[]
+        {
+            new System.Security.Claims.Claim("sub", user.Id.ToString()),
+            new System.Security.Claims.Claim("email", user.Email),
+            new System.Security.Claims.Claim("name", $"{user.FirstName} {user.LastName}"),
+            new System.Security.Claims.Claim("tenant_id", user.TenantId?.ToString() ?? ""),
+            new System.Security.Claims.Claim("facility_id", user.FacilityId?.ToString() ?? ""),
+            new System.Security.Claims.Claim("roles", string.Join(",", user.Roles))
+        }),
+        Expires = DateTime.UtcNow.AddDays(7),
+        Issuer = jwtIssuer,
+        Audience = jwtAudience,
+        SigningCredentials = new Microsoft.IdentityModel.Tokens.SigningCredentials(
+            new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(key),
+            Microsoft.IdentityModel.Tokens.SecurityAlgorithms.HmacSha256Signature)
+    };
+    
+    var token = tokenHandler.CreateToken(tokenDescriptor);
+    return tokenHandler.WriteToken(token);
+}
 
 // Request models for C3-Hive endpoints
 public record CreateLocationRequest(string Name, string? TimeZone, string? Address, string? GeojsonGate, string? GeojsonYard);

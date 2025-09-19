@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import {
   Eye,
   EyeOff,
@@ -15,8 +17,11 @@ import {
 import CollabLogo from '@/components/CollabLogo';
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -29,10 +34,80 @@ export default function SignUpPage() {
     subscribeNewsletter: false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle sign up logic here
-    console.log('Sign up:', formData);
+    setIsLoading(true);
+    setError('');
+
+    // Validate form
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!formData.agreeToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          company: formData.company,
+          phone: formData.phone,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || 'Registration failed');
+        setIsLoading(false);
+        return;
+      }
+
+      // Auto sign in after successful registration
+      const result = await signIn('credentials', {
+        email: formData.email,
+        password: formData.password,
+        redirect: false,
+      });
+
+      if (result?.ok) {
+        // Redirect to web app
+        window.location.href = 'http://localhost:3010/dashboard';
+      } else {
+        setError('Registration successful, but sign in failed. Please try signing in manually.');
+      }
+    } catch (error) {
+      setError('An error occurred during registration. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSocialSignUp = async (provider: string) => {
+    setIsLoading(true);
+    try {
+      await signIn(provider, { 
+        callbackUrl: 'http://localhost:3010/dashboard' 
+      });
+    } catch (error) {
+      setError('An error occurred with social sign up.');
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -416,12 +491,20 @@ export default function SignUpPage() {
                 </div>
               </div>
 
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  {error}
+                </div>
+              )}
+
               {/* Sign Up Button */}
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl"
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create Account & Start Free Trial
+                {isLoading ? 'Creating Account...' : 'Create Account & Start Free Trial'}
               </button>
             </form>
 
@@ -444,7 +527,9 @@ export default function SignUpPage() {
               {socialProviders.map((provider) => (
                 <button
                   key={provider.name}
-                  className={`w-full inline-flex items-center justify-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-colors duration-200 ${provider.color}`}
+                  onClick={() => handleSocialSignUp(provider.name.toLowerCase())}
+                  disabled={isLoading}
+                  className={`w-full inline-flex items-center justify-center py-3 px-4 border rounded-lg shadow-sm text-sm font-medium transition-colors duration-200 ${provider.color} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <div className="w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0">
                     {provider.icon}
