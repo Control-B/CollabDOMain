@@ -1,6 +1,6 @@
-# CollabDOMain - C3-Hive Style Logistics Platform
+# CollabDOMain - Slack-Style Collaboration for Trucking
 
-🚀 **Production-Ready Logistics Platform with Advanced Supply Chain Visibility**
+🚛 **Real-Time Collaboration Platform for the Trucking Industry**
 
 [![DigitalOcean](https://img.shields.io/badge/Platform-DigitalOcean-0080FF?style=for-the-badge&logo=digitalocean)](https://www.digitalocean.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com/)
@@ -9,15 +9,20 @@
 
 ## 🎯 Overview
 
-CollabDOMain is a comprehensive logistics platform that combines real-time collaboration with advanced supply chain management. Built with C3-Hive style features for predictive analytics, intelligent scheduling, and automated workflow management.
+CollabDOMain brings **Slack-like real-time collaboration** to the trucking industry with core features including automatic geofencing check-ins, integrated document management with e-signing, and enhanced supply chain visibility. Additional advanced features include predictive analytics, intelligent scheduling, and automated workflow management.
 
-### ✨ Key Features
+### ✨ Core Features
+
+- 💬 **Slack-Style Collaboration** - Real-time chat, voice, and video communication for trucking teams
+- 🎯 **Automatic Geofencing Check-ins** - Location-based automation and smart notifications  
+- 📄 **Document Management & E-Signing** - Digital workflow with integrated signatures and compliance
+- 🚛 **Fleet Communication** - Channel-based communication for drivers, dispatchers, and warehouse teams
+
+### 🚀 Enhanced Features (Bonus)
 
 - 📍 **Predictive ETA System** - Traffic-aware arrival predictions with ML insights
 - 📅 **Smart Appointment Scheduling** - Intelligent dock assignment and capacity optimization  
 - 🚛 **Real-Time Asset Tracking** - GPS-based trailer management with geofenced zones
-- 💬 **Live Collaboration** - Text, voice, and video chat via Elixir Phoenix Channels
-- 📄 **Document Management** - Digital signatures and automated workflows
 - ⚠️ **Exception Management** - Automated delay detection and escalation
 - 📊 **Comprehensive Analytics** - Real-time dashboards and performance metrics
 
