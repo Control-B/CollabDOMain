@@ -37,14 +37,20 @@ export default function SignInPage() {
 
   const handleSocialSignIn = async (provider: string) => {
     setIsLoading(true);
+    setError('');
+    
     try {
-      // Temporary: Just redirect to web app for now
-      // TODO: Re-enable real social authentication after deployment works
+      // For now, redirect to a success page since we don't have NextAuth
+      // In a real implementation, you would integrate with the provider's OAuth
+      console.log(`Social sign-in with ${provider} - redirecting to dashboard`);
+      
+      // Simulate a successful sign-in
       setTimeout(() => {
-        window.location.href = 'http://localhost:3010/dashboard';
+        router.push('/dashboard');
       }, 1000);
+      
     } catch (error) {
-      setError('An error occurred with social sign in.');
+      setError('Social sign-in is temporarily unavailable. Please use email sign-in.');
       setIsLoading(false);
     }
   };

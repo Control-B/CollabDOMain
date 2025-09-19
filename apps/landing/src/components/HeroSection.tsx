@@ -325,7 +325,10 @@ export default function HeroSection() {
                         console.error('Video src:', currentVideo.videoPath);
                       }}
                       onLoadStart={() => {
-                        console.log('Video loading started:', currentVideo.videoPath);
+                        console.log(
+                          'Video loading started:',
+                          currentVideo.videoPath,
+                        );
                       }}
                       onCanPlay={() => {
                         console.log('Video can play:', currentVideo.videoPath);
