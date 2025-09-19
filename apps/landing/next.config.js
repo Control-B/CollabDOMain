@@ -7,6 +7,9 @@ const nextConfig = {
     unoptimized: true,
   },
   
+  // Set explicit root to avoid multiple lockfile warnings
+  outputFileTracingRoot: __dirname,
+  
   // Disable all problematic features
   eslint: {
     ignoreDuringBuilds: true,
