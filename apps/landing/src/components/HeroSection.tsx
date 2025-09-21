@@ -157,10 +157,24 @@ export default function HeroSection() {
       '',
     []
   );
+  // Heuristic: if the site is hosted under a subpath (e.g., /landing/*), detect it from the current URL
+  const detectedBaseFromPath = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      // If the first segment appears across all routes (subpath host), using it as a prefix will succeed.
+      // If hosted at root, trying this candidate is harmless (the <video> will skip to the next source).
+      return parts.length > 0 ? `/${parts[0]}` : '';
+    } catch {
+      return '';
+    }
+  }, []);
   // When basePath-like prefixes are used (e.g., '/landing'), try both prefixed and unprefixed
   const resolveCandidates = useCallback(
     (p: string): string[] => {
       const candidates: string[] = [];
+      const isAbsolute = p.startsWith('/');
+      const relative = isAbsolute ? p.slice(1) : p;
       if (assetPrefix) {
         candidates.push(`${assetPrefix}${p}`);
         if (assetPrefix.startsWith('/')) {
@@ -169,10 +183,18 @@ export default function HeroSection() {
       } else {
         candidates.push(p);
       }
+      // Add heuristic candidate using detected base from current path (e.g., /landing)
+      if (detectedBaseFromPath && detectedBaseFromPath !== '/' && !assetPrefix) {
+        candidates.push(`${detectedBaseFromPath}${p}`);
+      }
+      // Add relative-path candidate so subpath hosting resolves automatically
+      if (relative && relative !== p) {
+        candidates.push(relative);
+      }
       // de-duplicate in case of overlaps
       return Array.from(new Set(candidates));
     },
-    [assetPrefix]
+    [assetPrefix, detectedBaseFromPath]
   );
 
   const currentVideo = videoDemos[currentVideoIndex];
