@@ -146,6 +146,8 @@ export default function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skippedVideosRef = useRef<Set<string>>(new Set());
+  const debugMedia =
+    typeof process !== 'undefined' && process.env.NEXT_PUBLIC_DEBUG_MEDIA === 'true';
 
   // Resolve asset URL with optional base path or asset prefix for DigitalOcean subpaths/CDNs
   const assetPrefix = useMemo(
@@ -155,18 +157,34 @@ export default function HeroSection() {
       '',
     []
   );
-  const resolveAsset = useCallback((p: string) => `${assetPrefix}${p}`,[assetPrefix]);
+  // When basePath-like prefixes are used (e.g., '/landing'), try both prefixed and unprefixed
+  const resolveCandidates = useCallback(
+    (p: string): string[] => {
+      const candidates: string[] = [];
+      if (assetPrefix) {
+        candidates.push(`${assetPrefix}${p}`);
+        if (assetPrefix.startsWith('/')) {
+          candidates.push(p); // unprefixed fallback
+        }
+      } else {
+        candidates.push(p);
+      }
+      // de-duplicate in case of overlaps
+      return Array.from(new Set(candidates));
+    },
+    [assetPrefix]
+  );
 
   const currentVideo = videoDemos[currentVideoIndex];
   const resolvedSources = useMemo(() => {
     if (currentVideo.videoSources && currentVideo.videoSources.length > 0) {
-      return currentVideo.videoSources.map((s) => resolveAsset(s));
+      return currentVideo.videoSources.flatMap((s) => resolveCandidates(s));
     }
     if (currentVideo.videoPath) {
-      return [resolveAsset(currentVideo.videoPath)];
+      return resolveCandidates(currentVideo.videoPath);
     }
     return [];
-  }, [currentVideo.videoPath, currentVideo.videoSources, resolveAsset]);
+  }, [currentVideo.videoPath, currentVideo.videoSources, resolveCandidates]);
   const currentVideoKey = resolvedSources.join(',') || currentVideo.id;
 
   // More intuitive and compelling rotating text
@@ -419,6 +437,18 @@ export default function HeroSection() {
                 ) : (
                   <div className="w-full h-full">
                     {currentVideo.component && <currentVideo.component />}
+                  </div>
+                )}
+                {debugMedia && (
+                  <div className="absolute top-2 right-2 z-20 text-xs bg-black/70 text-green-300 px-2 py-1 rounded border border-green-700 max-w-[75%] break-all">
+                    <div className="font-semibold text-green-200">Debug media</div>
+                    {resolvedSources.length > 0 ? (
+                      <div>
+                        src: {resolvedSources[0]}
+                      </div>
+                    ) : (
+                      <div>no video source (using animation)</div>
+                    )}
                   </div>
                 )}
               </div>

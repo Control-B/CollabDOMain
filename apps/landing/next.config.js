@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Use static export for reliable deployment
-  output: 'export',
+  // Default to Node server (standalone). Set NEXT_EXPORT=true to produce static export (out/).
+  output: process.env.NEXT_EXPORT === 'true' ? 'export' : 'standalone',
   trailingSlash: true,
   images: {
     unoptimized: true,
