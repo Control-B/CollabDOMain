@@ -423,7 +423,6 @@ export default function HeroSection() {
                       autoPlay
                       controls={false}
                       preload="auto"
-                      crossOrigin="anonymous"
                       onError={(e) => {
                         console.error('Video error:', e);
                         console.error(
