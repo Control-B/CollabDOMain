@@ -243,7 +243,7 @@ export default function SignUpPage() {
             </div>
 
             <div className="hidden lg:block mb-6">
-              <h2 className="text-2xl font-bold text-blue-400 mb-2">
+              <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-indigo-500 mb-2">
                 Create Your Account
               </h2>
               <p className="text-gray-600">Start your free trial today</p>

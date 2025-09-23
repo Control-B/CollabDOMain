@@ -424,11 +424,13 @@ export default function HeroSection() {
                       controls={false}
                       preload="auto"
                       onError={(e) => {
-                        console.error('Video error:', e);
-                        console.error(
-                          'Video src:',
-                          resolvedSources
-                        );
+                        console.error('Video error event:', e);
+                        console.error('Failed video sources:', resolvedSources);
+                        console.error('Current video element src:', videoRef.current?.currentSrc);
+                        console.error('Video element networkState:', videoRef.current?.networkState);
+                        console.error('Video element readyState:', videoRef.current?.readyState);
+                        console.error('Video element error code:', videoRef.current?.error?.code);
+                        console.error('Video element error message:', videoRef.current?.error?.message);
                         // If video fails, advance to next demo as a graceful fallback
                         if (!skippedVideosRef.current.has(currentVideoKey)) {
                           skippedVideosRef.current.add(currentVideoKey);
@@ -436,6 +438,15 @@ export default function HeroSection() {
                             setCurrentVideoIndex((prev) => (prev + 1) % videoDemos.length);
                           }, 800);
                         }
+                      }}
+                      onLoadStart={() => {
+                        console.log('Video load started for sources:', resolvedSources);
+                      }}
+                      onCanPlay={() => {
+                        console.log('Video can play:', videoRef.current?.currentSrc);
+                      }}
+                      onLoadedData={() => {
+                        console.log('Video loaded data:', videoRef.current?.currentSrc);
                       }}
                     >
                       {resolvedSources.map((src) => (
@@ -465,7 +476,10 @@ export default function HeroSection() {
                     <div className="font-semibold text-green-200">Debug media</div>
                     {resolvedSources.length > 0 ? (
                       <div>
-                        src: {resolvedSources[0]}
+                        <div>Sources: {resolvedSources.length}</div>
+                        <div>Current: {resolvedSources[0]}</div>
+                        <div>detectedBase: {detectedBaseFromPath || 'none'}</div>
+                        <div>assetPrefix: {assetPrefix || 'none'}</div>
                       </div>
                     ) : (
                       <div>no video source (using animation)</div>

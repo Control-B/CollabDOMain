@@ -1,4 +1,11 @@
 services:
+  landing:
+    build: ./apps/landing
+    ports:
+      - '3011:3011'
+    environment:
+      - NODE_ENV=production
+
   web:
     build: ./apps/web
     environment:
