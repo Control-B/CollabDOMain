@@ -1,0 +1,15 @@
+name: collabdomain-landing
+services:
+  - name: landing
+    source_dir: /
+    dockerfile_path: Dockerfile
+    http_port: 3000
+    routes:
+      - path: /
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+    health_check:
+      http_path: /
