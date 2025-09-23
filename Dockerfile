@@ -1,41 +1,34 @@
-# Landing Page Dockerfile (Root Level)
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY apps/landing/package.json apps/landing/package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+# Simple Landing Page Dockerfile
+FROM node:20-alpine
 
-FROM node:20-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files
+COPY apps/landing/package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
 COPY apps/landing/ .
-# Ensure we build for standalone
-ENV NEXT_EXPORT=false
+
+# Build the application
 RUN npm run build
 
-FROM node:20-alpine AS runner
-WORKDIR /app
-
+# Set environment
 ENV NODE_ENV=production
-# Use PORT from environment or default to 3000
 ENV PORT=3000
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Create user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
 
-# Copy built application - try standalone first, fallback to regular build
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Try to copy standalone, if it doesn't exist, copy regular Next.js files
-RUN mkdir -p /app/.next
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone* ./
-COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+# Change ownership
+RUN chown -R nextjs:nodejs /app
 
 USER nextjs
 
-# Expose the port that will be used
-EXPOSE $PORT
+EXPOSE 3000
 
-# Try standalone server first, fallback to next start
-CMD if [ -f "./server.js" ]; then node server.js; else npx next start; fi
+# Start the application
+CMD ["npm", "start"]
