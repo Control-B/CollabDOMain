@@ -1,6 +1,6 @@
-name: collabdomain-landing
+name: dispatch-app
 services:
-  - name: landing
+  - name: dispatch-app
     source_dir: /
     dockerfile_path: Dockerfile
     http_port: 3000
@@ -11,5 +11,7 @@ services:
         value: production
       - key: PORT
         value: "3000"
+      - key: NEXT_EXPORT
+        value: "false"
     health_check:
       http_path: /
