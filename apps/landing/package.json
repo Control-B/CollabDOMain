@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
   "dev": "next dev --port 3011 --hostname 0.0.0.0",
-    "build": "NEXT_EXPORT=true next build",
-    "build:standalone": "NEXT_EXPORT=false next build",
+  "build": "next build",
+  "build:standalone": "NEXT_EXPORT=false next build",
+  "build:export": "NEXT_EXPORT=true next build",
     "start": "next start --port ${PORT:-3000} --hostname 0.0.0.0",
     "lint": "eslint"
   },

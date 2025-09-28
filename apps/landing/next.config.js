@@ -10,7 +10,8 @@ const nextConfig = {
   basePath: process.env.NEXT_PUBLIC_BASE_PATH || undefined,
   assetPrefix: process.env.NEXT_PUBLIC_ASSET_PREFIX || undefined,
   // Silence monorepo root detection warning for output file tracing
-  outputFileTracingRoot: '/Users/banjahmarah/CollabDOmain/CollabDOMain',
+  // Use process.cwd() to avoid absolute path issues in CI/CD
+  outputFileTracingRoot: process.cwd(),
   
   // Disable all problematic features
   eslint: {

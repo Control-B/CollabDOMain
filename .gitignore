@@ -215,7 +215,6 @@ erl_crash.dump
 
 # Docker
 .dockerignore
-!**/.dockerignore
 
 # Uploads
 uploads/
