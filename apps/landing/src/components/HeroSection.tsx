@@ -424,13 +424,10 @@ export default function HeroSection() {
                       controls={false}
                       preload="auto"
                       onError={(e) => {
-                        console.error('Video error event:', e);
-                        console.error('Failed video sources:', resolvedSources);
-                        console.error('Current video element src:', videoRef.current?.currentSrc);
-                        console.error('Video element networkState:', videoRef.current?.networkState);
-                        console.error('Video element readyState:', videoRef.current?.readyState);
-                        console.error('Video element error code:', videoRef.current?.error?.code);
-                        console.error('Video element error message:', videoRef.current?.error?.message);
+                        // Silently handle video errors and fall back to animation
+                        if (debugMedia) {
+                          console.log('Video error, falling back to animation:', e);
+                        }
                         // If video fails, advance to next demo as a graceful fallback
                         if (!skippedVideosRef.current.has(currentVideoKey)) {
                           skippedVideosRef.current.add(currentVideoKey);
